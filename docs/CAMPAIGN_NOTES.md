@@ -33,15 +33,15 @@ Device: laptop, WSL Ubuntu 24.04, clang 18, 12 logical cores, 8 GB RAM.
    those test subprocess plumbing, not the library.
 4. Skip zero-length read buffers (the size-0 case is recorded above).
 
-## Round 2 (19 Oct, running)
+## Round 2 (19 Oct, 2 h on 9 cores) - complete
 
-All three harnesses exploring, no false-positive floods:
+All three harnesses explored productively, with no false-positive floods:
 
-| harness | corpus | coverage | artifacts |
+| harness | corpus | coverage (edges) | artifacts |
 |---|---|---|---|
-| write | 452 and growing | 36,992 | 0 |
-| read  | 3,757 | 55,168 | (round-1 clusters only) |
-| entry | 358 | 10,735 | 0 (locale fix removed the #2233 noise) |
+| write | 1,418 | 38,450 | 187 leaks (one root cause), 4 timeouts |
+| read  | 3,913 | 58,721 | 1 OOM, 2 slow units |
+| entry | 497 | 10,802 | 2 slow units, **0 crashes** (locale fix removed the #2233 flood) |
 
 ### Round-2 finding: write-filter resource leak (NEW, previously unreported)
 
@@ -60,8 +60,9 @@ artifacts, which triaged to a single root cause:
   `filters_close`, `WRITE_FILTER_STATE_FATAL`, leak+gzip/filter).
 - Patch written (28 insertions): per-filter `stream_valid` flag so `free()`
   releases the compressor state when `close()` was skipped.
-- Verified: standalone reproducer clean for gzip/xz/bzip2; **all 39** fuzzer
-  leak inputs clean; a normal successful gzip archive still works.
+- Verified: standalone reproducer clean for gzip/xz/bzip2; **all 187** leak
+  inputs from the campaign clean (46 reached it via gzip, 97 via xz); a normal
+  successful gzip archive still works; `libarchive_test` 945/945 passes.
 
 Write-up, reproducer and patch: `upstream/01-write-filter-leak/`.
 

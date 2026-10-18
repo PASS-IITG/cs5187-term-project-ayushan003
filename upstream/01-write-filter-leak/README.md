@@ -72,7 +72,7 @@ error path.
 | check | result |
 |---|---|
 | `repro.c` gzip / xz / bzip2 on patched master | no leak |
-| 39 leak-triggering inputs from the fuzzer, replayed on patched master | 0 still leak |
+| **187** leak-triggering inputs from the full campaign, replayed on patched master (46 reached it via gzip, 97 via xz) | **0 still leak** |
 | normal successful gzip archive (`close=0 free=0`, 87 bytes written) | works, no double-free |
 | patch applies cleanly to pristine `origin/master` (`bd7a249e`) | yes (`git apply --check`) |
 | libarchive's own `libarchive_test` suite on the patched tree | **945 run, 0 failed**, 31,835,086 assertions, 0 failed, 220 skipped |
