@@ -19,7 +19,7 @@ Write filters leak the compressor state (deflateEnd/lzma_end never called) when 
 When a compression write filter fails a write, it is put in the
 `ARCHIVE_WRITE_FILTER_STATE_FATAL` state. `__archive_write_filters_close()`
 only closes filters whose state is `OPEN`, so the filter's `close()` callback is
-skipped — and that callback is the only place that calls `deflateEnd()` (gzip) or
+skipped - and that callback is the only place that calls `deflateEnd()` (gzip) or
 `lzma_end()` (xz/lzma/lzip). The `free()` callback does not release it either, so
 the compression library's internal state is leaked.
 
@@ -37,7 +37,7 @@ leaks that much on every failure, so repeated failures exhaust memory.
 
 ### Version
 
-Reproduced on `master` at bd7a249e, and on 16e67684. Not version-specific —
+Reproduced on `master` at bd7a249e, and on 16e67684. Not version-specific -
 the code paths involved are long-standing.
 
 ### Relevant code
@@ -143,7 +143,7 @@ Fixes #<ISSUE NUMBER>.
 
 `__archive_write_filters_close()` skips filters that are not in the `OPEN`
 state, so a filter marked `FATAL` by a failed write never gets its `close()`
-callback — and that is the only place calling `deflateEnd()` / `lzma_end()`.
+callback - and that is the only place calling `deflateEnd()` / `lzma_end()`.
 The `free()` callback did not release it, leaking the zlib deflate state
 (~262 KB) or the liblzma encoder state (~9 MB) per failed archive.
 
@@ -172,4 +172,4 @@ cannot introduce extra writes down an already-failing filter chain.
 ## 5. After filing
 
 Record the issue and PR URLs plus their state in `../../UPSTREAM.md`, and answer
-review comments the same day — that is what gets a patch merged in time.
+review comments the same day - that is what gets a patch merged in time.
