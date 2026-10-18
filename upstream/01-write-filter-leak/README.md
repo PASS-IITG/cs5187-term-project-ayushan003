@@ -2,7 +2,36 @@
 
 **Status:** candidate, not yet filed upstream (see "Before filing" below)
 **Found by:** GapHarn `harness_write` (gap-directed harness for `archive_write_*`)
-**Affected:** `master` @ `bd7a249e` (2026-10-17) and `16e67684` (2026-10-03). Not version-specific.
+**Affected:** `master` @ `7f149b10` (2026-10-18), `bd7a249e` and `16e67684`. Not version-specific.
+
+## Why this is libarchive's bug and not caller error
+
+`differential_test.c` runs the **identical** call sequence twice, changing only
+the sink capacity:
+
+| sink | result | leak |
+|---|---|---|
+| 1 KB (write fails, filter left FATAL) | `close=-30 free=0` | **268,096 bytes** |
+| 2 MB (write succeeds, `close()` runs) | `close=0 free=0` | none |
+
+The caller code is byte-for-byte the same in both runs, and both call
+`archive_write_close()` then `archive_write_free()`. So the leak is on
+libarchive's error path, not a missing `free()` in the caller.
+
+## Precedent: the same bug class was already fixed on the READ side
+
+Commit `4f9783c8` (Martin Matuska, 2016-12-07), *"Close filters before freeing"*:
+
+> Plugs memory leak of allocated filter buffers if `archive_read_free()` is
+> called and archive state is `ARCHIVE_STATE_FATAL`.
+> Reported-by: OSS-Fuzz issue 227, 230, 239
+
+That fixed `archive_read.c`. The symmetric problem on the **write** side was
+never addressed, and is still present on current master. The `stream_valid`
+flag this patch uses is also already libarchive's own idiom - see
+`archive_read_support_format_7zip.c`, which guards `lzma_end()`,
+`BZ2_bzDecompressEnd()` and `ZSTD_freeDStream()` with
+`lzstream_valid` / `bzstream_valid` / `zstdstream_valid` / `stream_valid`.
 **Type:** memory / resource leak, reachable from the documented public API
 **Impact:** ~262 KB leaked per failed gzip archive, ~9 MB per failed xz archive.
 A long-running process that creates compressed archives and hits write errors
