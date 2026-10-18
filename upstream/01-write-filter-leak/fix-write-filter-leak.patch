@@ -1,0 +1,94 @@
+diff --git a/libarchive/archive_write_add_filter_gzip.c b/libarchive/archive_write_add_filter_gzip.c
+index b3be114b..0607b532 100644
+--- a/libarchive/archive_write_add_filter_gzip.c
++++ b/libarchive/archive_write_add_filter_gzip.c
+@@ -66,6 +66,7 @@ struct gzip {
+ 	unsigned char	*compressed;
+ 	size_t		 compressed_buffer_size;
+ 	unsigned long	 crc;
++	int		 stream_valid;
+ #else
+ 	struct archive_write_program_data *pdata;
+ #endif
+@@ -146,6 +147,17 @@ memerr:
+ static int
+ archive_compressor_gzip_free(struct archive_write_filter *f)
+ {
++#ifdef HAVE_ZLIB_H
++	struct gzip *gzip = f->data;
++
++	/* If the filter was left in the FATAL state, archive_write_filters_close()
++	 * skipped archive_compressor_gzip_close(), so the zlib stream was never
++	 * ended. Release it here to avoid leaking the deflate state. */
++	if (gzip != NULL && gzip->stream_valid) {
++		deflateEnd(&(gzip->stream));
++		gzip->stream_valid = 0;
++	}
++#endif
+ 	free_data(f->data);
+ 	f->data = NULL;
+ 	return (ARCHIVE_OK);
+@@ -283,6 +295,7 @@ archive_compressor_gzip_open(struct archive_write_filter *f)
+ 	    Z_DEFAULT_STRATEGY);
+ 
+ 	if (init_success == Z_OK) {
++		gzip->stream_valid = 1;
+ 		return (ret);
+ 	}
+ 
+@@ -359,6 +372,7 @@ archive_compressor_gzip_close(struct archive_write_filter *f)
+ 		ret = __archive_write_filter(f->next_filter, trailer, 8);
+ 	}
+ 
++	gzip->stream_valid = 0;
+ 	switch (deflateEnd(&(gzip->stream))) {
+ 	case Z_OK:
+ 		break;
+diff --git a/libarchive/archive_write_add_filter_xz.c b/libarchive/archive_write_add_filter_xz.c
+index 599ee413..8ab14462 100644
+--- a/libarchive/archive_write_add_filter_xz.c
++++ b/libarchive/archive_write_add_filter_xz.c
+@@ -111,6 +111,7 @@ struct xz {
+ 	int64_t		 total_out;
+ 	/* the CRC32 value of uncompressed data for lzip */
+ 	uint32_t	 crc32;
++	int		 stream_valid;
+ };
+ 
+ static int	archive_compressor_xz_options(struct archive_write_filter *,
+@@ -271,8 +272,10 @@ archive_compressor_xz_init_stream(struct archive_write_filter *f,
+ 
+ 		ret = lzma_raw_encoder(&(xz->stream), xz->lzmafilters);
+ 	}
+-	if (ret == LZMA_OK)
++	if (ret == LZMA_OK) {
++		xz->stream_valid = 1;
+ 		return (ARCHIVE_OK);
++	}
+ 
+ 	switch (ret) {
+ 	case LZMA_MEM_ERROR:
+@@ -456,6 +459,7 @@ archive_compressor_xz_close(struct archive_write_filter *f)
+ 			    xz->compressed, 20);
+ 		}
+ 	}
++	xz->stream_valid = 0;
+ 	lzma_end(&(xz->stream));
+ 	return ret;
+ }
+@@ -463,6 +467,15 @@ archive_compressor_xz_close(struct archive_write_filter *f)
+ static int
+ archive_compressor_xz_free(struct archive_write_filter *f)
+ {
++	struct xz *xz = f->data;
++
++	/* If the filter was left in the FATAL state, __archive_write_filters_close()
++	 * skipped archive_compressor_xz_close(), so the liblzma stream was never
++	 * ended. Release it here to avoid leaking the encoder state. */
++	if (xz != NULL && xz->stream_valid) {
++		xz->stream_valid = 0;
++		lzma_end(&(xz->stream));
++	}
+ 	free_data(f->data);
+ 	f->data = NULL;
+ 	return (ARCHIVE_OK);
