@@ -1,0 +1,36 @@
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 1761478072
+INFO: Loaded 1 modules   (74783 inline 8-bit counters): 74783 [0x5ac4fd34fe18, 0x5ac4fd362237), 
+INFO: Loaded 1 PC tables (74783 PCs): 74783 [0x5ac4fd362238,0x5ac4fd486428), 
+/var/tmp/triage_read/harness_read: Running 1 inputs 1 time(s) each.
+Running: /var/tmp/triage_read/crash_harness_read_oom-6c4ef1fdcadaf9c9a75daeda7dd6c33ce27bef44
+==150497== ERROR: libFuzzer: out-of-memory (malloc(4211085312))
+   To change the out-of-memory limit use -rss_limit_mb=<N>
+
+    #0 0x5ac4fceb8e15 in __sanitizer_print_stack_trace (/var/tmp/triage_read/harness_read+0x42be15) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #1 0x5ac4fce1292c in fuzzer::PrintStackTrace() (/var/tmp/triage_read/harness_read+0x38592c) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #2 0x5ac4fcdf77c5 in fuzzer::Fuzzer::HandleMalloc(unsigned long) (/var/tmp/triage_read/harness_read+0x36a7c5) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #3 0x5ac4fcdf76cf in fuzzer::MallocHook(void const volatile*, unsigned long) (/var/tmp/triage_read/harness_read+0x36a6cf) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #4 0x5ac4fcec06d6 in __sanitizer::RunMallocHooks(void*, unsigned long) (/var/tmp/triage_read/harness_read+0x4336d6) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #5 0x5ac4fce15f12 in __asan::Allocator::Allocate(unsigned long, unsigned long, __sanitizer::BufferedStackTrace*, __asan::AllocType, bool) (/var/tmp/triage_read/harness_read+0x388f12) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #6 0x5ac4fce15847 in __asan::asan_malloc(unsigned long, __sanitizer::BufferedStackTrace*) (/var/tmp/triage_read/harness_read+0x388847) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #7 0x5ac4fceae113 in malloc (/var/tmp/triage_read/harness_read+0x421113) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #8 0x7035ef553a1f  (/lib/x86_64-linux-gnu/liblzma.so.5+0x16a1f) (BuildId: 78d7220824dfcd33ee3d68ae94e1d58e0bebdbe0)
+    #9 0x7035ef5427e9  (/lib/x86_64-linux-gnu/liblzma.so.5+0x57e9) (BuildId: 78d7220824dfcd33ee3d68ae94e1d58e0bebdbe0)
+    #10 0x7035ef5437d6 in lzma_code (/lib/x86_64-linux-gnu/liblzma.so.5+0x67d6) (BuildId: 78d7220824dfcd33ee3d68ae94e1d58e0bebdbe0)
+    #11 0x5ac4fcf2f044 in xz_filter_read /home/mehul/gapharn-work/libarchive/src/libarchive/archive_read_support_filter_xz.c:681:9
+    #12 0x5ac4fcefb14c in __archive_read_filter_ahead /home/mehul/gapharn-work/libarchive/src/libarchive/archive_read.c:1431:17
+    #13 0x5ac4fcf35030 in archive_read_format_ar_bid /home/mehul/gapharn-work/libarchive/src/libarchive/archive_read_support_format_ar.c:155:11
+    #14 0x5ac4fcef487f in bid_format /home/mehul/gapharn-work/libarchive/src/libarchive/archive_read.c:714:8
+    #15 0x5ac4fcef075d in choose_format /home/mehul/gapharn-work/libarchive/src/libarchive/archive_read.c:744:10
+    #16 0x5ac4fcef075d in archive_read_open1 /home/mehul/gapharn-work/libarchive/src/libarchive/archive_read.c:509:10
+    #17 0x5ac4fceeca2a in LLVMFuzzerTestOneInput /mnt/c/Users/forme/Downloads/Jj/cs5187-term-project-ayushan003/src/harnesses/libarchive/harness_read.c:43:9
+    #18 0x5ac4fcdf9f84 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) (/var/tmp/triage_read/harness_read+0x36cf84) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #19 0x5ac4fcde30b6 in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) (/var/tmp/triage_read/harness_read+0x3560b6) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #20 0x5ac4fcde8b6a in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) (/var/tmp/triage_read/harness_read+0x35bb6a) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #21 0x5ac4fce13326 in main (/var/tmp/triage_read/harness_read+0x386326) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+    #22 0x7035ec62a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #23 0x7035ec62a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #24 0x5ac4fcdddc84 in _start (/var/tmp/triage_read/harness_read+0x350c84) (BuildId: 3ab5488d19e1db7a8049b8bb3796dce1af3982d6)
+
+SUMMARY: libFuzzer: out-of-memory

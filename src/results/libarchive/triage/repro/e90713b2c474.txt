@@ -1,0 +1,43 @@
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 3549876672
+INFO: Loaded 1 modules   (97825 inline 8-bit counters): 97825 [0x5e89ee345428, 0x5e89ee35d249), 
+INFO: Loaded 1 PC tables (97825 PCs): 97825 [0x5e89ee35d250,0x5e89ee4db460), 
+/home/mehul/gapharn-work/libarchive/campaign/harness_entry: Running 1 inputs 1 time(s) each.
+Running: /home/mehul/gapharn-work/libarchive/campaign/crash_harness_entry_crash-00c1cf96ebdda4066d38867ab96557248166095f
+/home/mehul/gapharn-work/libarchive/src/libarchive/archive_write_set_format_pax.c:338:45: runtime error: null pointer passed as argument 1, which is declared to never be null
+/usr/include/string.h:408:33: note: nonnull attribute specified here
+    #0 0x5e89edfaeb01 in add_pax_attr /home/mehul/gapharn-work/libarchive/src/libarchive/archive_write_set_format_pax.c:338:38
+    #1 0x5e89edfa8e97 in archive_write_pax_header /home/mehul/gapharn-work/libarchive/src/libarchive/archive_write_set_format_pax.c
+    #2 0x5e89edfa3a96 in _archive_write_header /home/mehul/gapharn-work/libarchive/src/libarchive/archive_write.c:824:8
+    #3 0x5e89eddabeb2 in LLVMFuzzerTestOneInput /mnt/c/Users/forme/Downloads/Jj/cs5187-term-project-ayushan003/src/harnesses/libarchive/harness_entry.c:65:13
+    #4 0x5e89edcb9104 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x46c104) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #5 0x5e89edca2236 in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x455236) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #6 0x5e89edca7cea in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x45acea) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #7 0x5e89edcd24a6 in main (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x4854a6) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #8 0x7e183d22a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #9 0x7e183d22a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #10 0x5e89edc9ce04 in _start (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x44fe04) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/mehul/gapharn-work/libarchive/src/libarchive/archive_write_set_format_pax.c:338:45 
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==2282==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x7e183d38b95d bp 0x7ffe2be61120 sp 0x7ffe2be608d8 T0)
+==2282==The signal is caused by a READ memory access.
+==2282==Hint: address points to the zero page.
+    #0 0x7e183d38b95d  (/lib/x86_64-linux-gnu/libc.so.6+0x18b95d) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #1 0x5e89edce9a87 in strlen (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x49ca87) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #2 0x5e89edfaead4 in add_pax_attr /home/mehul/gapharn-work/libarchive/src/libarchive/archive_write_set_format_pax.c:338:38
+    #3 0x5e89edfa8e97 in archive_write_pax_header /home/mehul/gapharn-work/libarchive/src/libarchive/archive_write_set_format_pax.c
+    #4 0x5e89edfa3a96 in _archive_write_header /home/mehul/gapharn-work/libarchive/src/libarchive/archive_write.c:824:8
+    #5 0x5e89eddabeb2 in LLVMFuzzerTestOneInput /mnt/c/Users/forme/Downloads/Jj/cs5187-term-project-ayushan003/src/harnesses/libarchive/harness_entry.c:65:13
+    #6 0x5e89edcb9104 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x46c104) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #7 0x5e89edca2236 in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x455236) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #8 0x5e89edca7cea in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x45acea) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #9 0x5e89edcd24a6 in main (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x4854a6) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+    #10 0x7e183d22a1c9  (/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #11 0x7e183d22a28a in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x2a28a) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7)
+    #12 0x5e89edc9ce04 in _start (/home/mehul/gapharn-work/libarchive/campaign/harness_entry+0x44fe04) (BuildId: 4e02d307942fad2819cc65dff46bd7dc5536d710)
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV (/lib/x86_64-linux-gnu/libc.so.6+0x18b95d) (BuildId: 328820b908de8ea1ef79afa8995e302e819163d7) 
+==2282==ABORTING

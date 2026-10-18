@@ -1,0 +1,40 @@
+[
+ {
+  "id": "270912ca3ac0",
+  "bug_type": "runtime error: division by zero",
+  "top_frames": [
+   "memory_read_skip@archive_read_open_memory.c:141",
+   "client_skip_proxy@archive_read.c:191",
+   "advance_file_pointer@archive_read.c:1619"
+  ],
+  "harness": "harness_read",
+  "reproducer": "/mnt/c/Users/forme/Downloads/Jj/cs5187-term-project-ayushan003/src/results/libarchive/triage/repro/270912ca3ac0.bin",
+  "example_input": "/var/tmp/triage_read/crash_harness_read_crash-20001b6928e8927355302912f4055b44930b4ebe",
+  "count": 4,
+  "status": "UNREVIEWED"
+ },
+ {
+  "id": "5763b7dbf686",
+  "bug_type": "out-of-memory",
+  "top_frames": [
+   "xz_filter_read@archive_read_support_filter_xz.c:681",
+   "__archive_read_filter_ahead@archive_read.c:1431",
+   "archive_read_format_ar_bid@archive_read_support_format_ar.c:155"
+  ],
+  "harness": "harness_read",
+  "reproducer": "/mnt/c/Users/forme/Downloads/Jj/cs5187-term-project-ayushan003/src/results/libarchive/triage/repro/5763b7dbf686.bin",
+  "example_input": "/var/tmp/triage_read/crash_harness_read_oom-6c4ef1fdcadaf9c9a75daeda7dd6c33ce27bef44",
+  "count": 2,
+  "status": "UNREVIEWED"
+ },
+ {
+  "id": "50d8b4a941c2",
+  "bug_type": "unknown",
+  "top_frames": [],
+  "harness": "harness_read",
+  "reproducer": "/mnt/c/Users/forme/Downloads/Jj/cs5187-term-project-ayushan003/src/results/libarchive/triage/repro/50d8b4a941c2.bin",
+  "example_input": "/var/tmp/triage_read/crash_harness_read_slow-unit-0729e870ba145ea8c6e0d44732dfd92c6a3a7187",
+  "count": 5,
+  "status": "UNREVIEWED"
+ }
+]

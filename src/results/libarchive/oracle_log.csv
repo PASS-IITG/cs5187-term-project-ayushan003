@@ -1,0 +1,4 @@
+harness,O1_compile,O2_sanity,O3_gaphit,O4_lint,verdict,reason
+harness_entry,pass,candidate,15 hit,pass,keep,kept; candidate crash on a seed saved for triage
+harness_read,pass,clean,5 hit,pass,keep,
+harness_write,pass,misuse,14 hit,pass,reject,O2: crash on trivial input (harness misuses the API)
