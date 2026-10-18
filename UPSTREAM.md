@@ -8,7 +8,20 @@ Target: **libarchive** (`libarchive/libarchive`), pinned commit
 
 | # | Date | Area / API | Bug type | Reproducer | Report | State |
 |---|------|-----------|----------|-----------|--------|-------|
-| 1 | 2026-10-19 | `archive_write_add_filter_gzip` / `_xz` + `__archive_write_filters_close` | memory leak (262 KB gzip / 9 MB xz per failed archive) | [`upstream/01-write-filter-leak/repro.c`](upstream/01-write-filter-leak/repro.c) | [write-up + patch](upstream/01-write-filter-leak/) · [ready-to-paste issue/PR](upstream/01-write-filter-leak/FILING.md) | **READY TO FILE** — all checks green (reproduces on master `bd7a249e`, patch applies cleanly, 945/945 tests pass, no duplicate found) |
+| 1 | 2026-10-19 | `archive_write_add_filter_gzip` / `_xz` + `__archive_write_filters_close` | memory leak (268,096 B gzip / ~9 MB xz per failed archive) | [`repro.c`](upstream/01-write-filter-leak/repro.c), [`differential_test.c`](upstream/01-write-filter-leak/differential_test.c) | **Issue [libarchive#3715](https://github.com/libarchive/libarchive/issues/3715)** · [write-up + patch](upstream/01-write-filter-leak/) | **OPEN** (filed 2026-10-19). PR branch pushed: [`mehul-v0:fix-write-filter-compressor-leak`](https://github.com/mehul-v0/libarchive/tree/fix-write-filter-compressor-leak) — PR to be opened |
+
+Evidence that finding #1 is genuine and not caller error:
+
+* Reproduces on current master `7f149b10` (2026-10-18), and on `bd7a249e` / `16e67684`.
+* `differential_test.c`: the identical call sequence with a 2 MB sink (write
+  succeeds) leaks nothing; with a 1 KB sink (write fails) leaks 268,096 bytes.
+  So the leak is on libarchive's error path, not a missing `free()` in the caller.
+* 187 independent inputs from the campaign reached it, through two different
+  filters (46 gzip, 97 xz). All 187 are clean after the patch.
+* `libarchive_test` on the patched tree: 945 run, 0 failed.
+* Precedent: commit `4f9783c8` (2016) fixed this exact bug class on the **read**
+  side ("Close filters before freeing", OSS-Fuzz 227/230/239). The write side
+  was never fixed.
 
 ### Not reportable (investigated and ruled out)
 
