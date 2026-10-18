@@ -1,5 +1,10 @@
 # CS-5187 — Term Project
 
+> **Our project: GapHarn.** Gap-directed fuzz-harness generation for C libraries
+> (topic A1). The code, build and run instructions are in [`src/README.md`](src/README.md).
+> Team rules are in [`CONTRIBUTING.md`](CONTRIBUTING.md), and the license is [MIT](LICENSE).
+> The course's original instructions follow.
+
 This repository is your starting point for the CS-5187 term project. It has two
 parts:
 
