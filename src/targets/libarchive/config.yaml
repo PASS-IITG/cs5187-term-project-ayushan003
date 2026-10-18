@@ -1,0 +1,32 @@
+# libarchive: primary target candidate (see TERM_PROJECT_PLAN.md §3).
+name: libarchive
+repo: https://github.com/libarchive/libarchive.git
+# Pinned commit (master on 2026-10-03), so the gap numbers are reproducible.
+ref: 16e67684befa5a78ec2121702fa1e95fa755714e
+
+# Public API = functions declared in these headers (relative to the checkout).
+headers:
+  - libarchive/archive.h
+  - libarchive/archive_entry.h
+include_dirs:
+  - libarchive
+defines: []
+
+# Static library produced by targets/libarchive/build.sh, relative to a build dir.
+static_lib: lib/libarchive.a
+# Fallback link flags; build.sh writes the real ones (from libarchive.pc) to LINK_FLAGS.
+link_flags: [-lxml2, -lzstd, -llz4, -llzma, -lbz2, -lz]
+
+# Existing harnesses whose coverage defines "reached". Relative globs are inside
+# the checkout; $OSS_FUZZ is a checkout of github.com/google/oss-fuzz (optional).
+harness_globs:
+  - contrib/oss-fuzz/*.cc
+  - contrib/oss-fuzz/*.c
+  - $OSS_FUZZ/projects/libarchive/*.cc
+  - $OSS_FUZZ/projects/libarchive/*.c
+
+# Seed inputs taken from the library's own test suite (uuencoded archives).
+seed_globs:
+  - "libarchive/test/*.uu"
+  - "tar/test/*.uu"
+  - "cpio/test/*.uu"

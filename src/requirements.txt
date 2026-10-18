@@ -1,0 +1,5 @@
+# Pinned versions (tested on Ubuntu 24.04, Python 3.12, clang 18.1.3).
+# libclang's major version should match the system clang (see scripts/check_env.sh).
+libclang==18.1.1
+PyYAML==6.0.3
+pytest==9.1.1
