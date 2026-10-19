@@ -1,127 +1,100 @@
-# libarchive: compression filters leak the compressor state when left in the FATAL state
+# libarchive: write-side compressor state is leaked when cleanup is skipped after a fatal error
 
-**Status:** candidate, not yet filed upstream (see "Before filing" below)
+**Upstream:** issue [#3715](https://github.com/libarchive/libarchive/issues/3715),
+PR [#3716](https://github.com/libarchive/libarchive/pull/3716)
 **Found by:** GapHarn `harness_write` (gap-directed harness for `archive_write_*`)
-**Affected:** `master` @ `7f149b10` (2026-10-18), `bd7a249e` and `16e67684`. Not version-specific.
+**Affected:** `master` @ `7f149b10` (2026-10-18), `bd7a249e`, `16e67684`. Long-standing, not a regression.
+**Type:** memory / resource leak, reachable from the documented public API
 
-## Why this is libarchive's bug and not caller error
+## Two distinct defects, same shape
+
+`close()` is the only place that releases the compression library's state, and
+it is skipped once the write side goes fatal. `free()` does not compensate.
+
+| # | Where | `close()` releases | `free()` releases | Leak |
+|---|---|---|---|---|
+| 1 | `archive_write_add_filter_gzip.c` | `deflateEnd()` | no | 268,096 B |
+| 1 | `archive_write_add_filter_xz.c` (xz/lzma/lzip) | `lzma_end()` | no | **~97 MB** |
+| 2 | `archive_write_set_format_zip.c` | `deflateEnd()` in `finish_entry()` only | no | 268,096 B |
+
+For (1), `__archive_write_filters_close()` only closes filters whose state is
+`ARCHIVE_WRITE_FILTER_STATE_OPEN`; a filter marked `FATAL` by a failed write
+(`archive_write.c:294`, `:328`, `:356`) never gets its `close()`.
+
+For (2), the zip writer calls `deflateInit2()` per entry in
+`archive_write_zip_header()` (line 1365) and ends it only in
+`archive_write_zip_finish_entry()`. If the archive goes fatal first,
+`archive_write_zip_free()` never releases it - even though that function already
+uses `tctx_valid` / `cctx_valid` / `hctx_valid` flags for its other resources.
+
+## Evidence
+
+### It is libarchive's error path, not caller error
 
 `differential_test.c` runs the **identical** call sequence twice, changing only
 the sink capacity:
 
-| sink | result | leak |
+| sink | outcome | leak |
 |---|---|---|
-| 1 KB (write fails, filter left FATAL) | `close=-30 free=0` | **268,096 bytes** |
-| 2 MB (write succeeds, `close()` runs) | `close=0 free=0` | none |
+| 1 KB (write fails) | `close=-30 free=0` | **268,096 bytes** |
+| 2 MB (write succeeds) | `close=0 free=0` | none |
 
-The caller code is byte-for-byte the same in both runs, and both call
-`archive_write_close()` then `archive_write_free()`. So the leak is on
-libarchive's error path, not a missing `free()` in the caller.
+If the caller had forgotten a `free()`, both runs would leak. Only the error
+path does.
 
-## Precedent: the same bug class was already fixed on the READ side
+### Scope: 33 leaking format x filter combinations
 
-Commit `4f9783c8` (Martin Matuska, 2016-12-07), *"Close filters before freeing"*:
+`filter_matrix.c` and the format x filter sweep on unpatched `7f149b10`:
 
-> Plugs memory leak of allocated filter buffers if `archive_read_free()` is
-> called and archive state is `ARCHIVE_STATE_FATAL`.
-> Reported-by: OSS-Fuzz issue 227, 230, 239
-
-That fixed `archive_read.c`. The symmetric problem on the **write** side was
-never addressed, and is still present on current master. The `stream_valid`
-flag this patch uses is also already libarchive's own idiom - see
-`archive_read_support_format_7zip.c`, which guards `lzma_end()`,
-`BZ2_bzDecompressEnd()` and `ZSTD_freeDStream()` with
-`lzstream_valid` / `bzstream_valid` / `zstdstream_valid` / `stream_valid`.
-**Type:** memory / resource leak, reachable from the documented public API
-**Impact:** ~262 KB leaked per failed gzip archive, ~9 MB per failed xz archive.
-A long-running process that creates compressed archives and hits write errors
-(full disk, failing write callback, undersized memory sink) leaks that much each
-time, so repeated failures exhaust memory.
-
-## Root cause
-
-`__archive_write_filters_close()` (`libarchive/archive_write.c`) only closes
-filters whose state is `OPEN`:
-
-```c
-/* Do not close filters that are not open */
-if (f->state == ARCHIVE_WRITE_FILTER_STATE_OPEN) {
-        if (f->close != NULL) {
-                ret1 = (f->close)(f);
-```
-
-A filter is set to `ARCHIVE_WRITE_FILTER_STATE_FATAL` when a write through it
-fails (`archive_write.c:294`, `:328`, `:356`). The compressor's `close` callback
-is the **only** place that releases the compression library's internal state:
-
-| filter | `close()` releases | `free()` releases |
+| filter | formats affected | leak each |
 |---|---|---|
-| gzip (`archive_write_add_filter_gzip.c`) | `deflateEnd(&gzip->stream)` | **no** - only `free_data()` |
-| xz/lzma/lzip (`archive_write_add_filter_xz.c`) | `lzma_end(&xz->stream)` | **no** - only `free_data()` |
+| xz / lzma / lzip | ustar, pax, zip, cpio, warc, shar, raw, gnutar | ~97 MB |
+| gzip | same 8 formats | 268,096 B |
+| any compressing filter + `zip` format | - | +268,096 B (defect 2) |
 
-So once a filter goes FATAL, `close` is skipped, `free` does not compensate, and
-zlib's deflate state (~262 KB) or liblzma's encoder state (~9 MB) is leaked -
-even though the caller correctly called `archive_write_close()` and
-`archive_write_free()`.
+**After the patch: 0 of 33 combinations leak.**
 
-## Reproducer
-
-`repro.c` uses only documented public API. The sink is a deliberately small
-memory buffer (a legitimate use of `archive_write_open_memory()`); the same
-failure occurs with any sink that fails mid-write.
-
-```sh
-clang -g -fsanitize=address -I<libarchive-src>/libarchive repro.c \
-      <build>/libarchive/libarchive.a -lz -llzma -lbz2 -lzstd -llz4 -lxml2 -o repro
-./repro gzip     # LeakSanitizer: 268096 bytes in archive_compressor_gzip_open
-./repro xz       # liblzma encoder state
-```
-
-Observed on unpatched master:
-
-```
-Direct leak of 5952 byte(s) in 1 object(s) allocated from:
-    #1 deflateInit2_ (libz.so.1)
-    #2 archive_compressor_gzip_open archive_write_add_filter_gzip.c:278
-Indirect leak of 65536 byte(s) in 1 object(s)  x4
-SUMMARY: AddressSanitizer: 268096 byte(s) leaked in 5 allocation(s).
-```
-
-## Proposed fix
-
-`fix-write-filter-leak.patch` (28 insertions, 1 deletion) adds a `stream_valid`
-flag to the gzip and xz filter state, set when the compressor is successfully
-initialized and cleared by `close()`. Each filter's `free()` callback releases
-the compressor state if `close()` never ran. This is deliberately narrow: it does
-not change when `close()` is called, so it cannot introduce extra writes on an
-error path.
-
-### Verification
+### Other verification
 
 | check | result |
 |---|---|
-| `repro.c` gzip / xz / bzip2 on patched master | no leak |
-| **187** leak-triggering inputs from the full campaign, replayed on patched master (46 reached it via gzip, 97 via xz) | **0 still leak** |
-| normal successful gzip archive (`close=0 free=0`, 87 bytes written) | works, no double-free |
-| patch applies cleanly to pristine `origin/master` (`bd7a249e`) | yes (`git apply --check`) |
-| libarchive's own `libarchive_test` suite on the patched tree | **945 run, 0 failed**, 31,835,086 assertions, 0 failed, 220 skipped |
+| 187 leak inputs from the fuzzing campaign (46 gzip, 97 xz), replayed on the patched tree | 0 still leak |
+| normal successful archive (`close=0 free=0`, output unchanged) | no leak, no double `deflateEnd()` |
+| patch applies cleanly to pristine `origin/master` `7f149b10` | yes |
+| `libarchive_test` on the fully patched tree | **945 run, 0 failed**, 31,835,086 assertions, 0 failed |
 
-An alternative fix would be to close FATAL filters in
-`__archive_write_filters_close()`, but that risks issuing further writes down a
-filter chain that is already failing, so the per-filter cleanup is safer.
+## Fix
 
-## Before filing (checklist from ../../UPSTREAM.md)
+`fix-write-filter-leak.patch` - 3 files, 40 insertions, 1 deletion. A
+`stream_valid` / `deflate_valid` flag is set when the compressor is initialized
+and cleared by `close()`; each `free()` releases the stream if `close()` never
+ran. It does not change *when* `close()` is called, so it cannot introduce extra
+writes down an already-failing filter chain.
 
-- [x] Reproduces on latest `master` (`bd7a249e`)
-- [x] Uses only documented public API, correct call sequence (close then free)
-- [x] Not already reported - searched issues and PRs for `deflateEnd`,
-      `lzma_end`, `filters_close`, `WRITE_FILTER_STATE_FATAL`, and
-      "leak + gzip/filter": no match. Closest existing reports are different
-      leaks: #1302 (`archive_write_client_open`, fixed) and #1740
-      (`archive_write_zip_finish_entry`, fixed).
-- [x] Minimal standalone reproducer
-- [x] Root cause located, patch written
-- [x] libarchive test suite green on the patched tree (945/945)
-- [ ] **Filed upstream** - public issue + PR. This is a resource leak, not memory
-      corruption, so it does not need private disclosure. Ready-to-paste issue
-      and PR text is in `FILING.md`.
+This follows libarchive's own idiom: `archive_read_support_format_7zip.c` guards
+`lzma_end()` / `BZ2_bzDecompressEnd()` / `ZSTD_freeDStream()` with
+`lzstream_valid` / `bzstream_valid` / `zstdstream_valid`, and the zip writer
+already guards its crypto contexts with `cctx_valid` / `hctx_valid`.
+
+## Relationship to other upstream work
+
+* `4f9783c8` (2016, *"Close filters before freeing"*, OSS-Fuzz 227/230/239)
+  fixed this exact bug class on the **read** side. The write side was never done.
+* PR [#3471](https://github.com/libarchive/libarchive/pull/3471) (draft) covers
+  the same general area - cleanup skipped when the write side is fatal - but its
+  examples are **file descriptors** (`file_free()` not closing `mine->fd`) and
+  **program-filter child pipes**, not the compressor state. It is also described
+  as a master-only regression from #3354, whereas this leak is long-standing.
+  In that thread the maintainer wrote: *"formats and filters should properly
+  release resources in their free routines ... IMHO, this would be the better
+  approach here"* - which is the approach this patch takes.
+
+## Files here
+
+| file | purpose |
+|---|---|
+| `fix-write-filter-leak.patch` | the fix (gzip, xz, zip writer) |
+| `repro.c` | minimal standalone reproducer |
+| `differential_test.c` | same sequence, only sink size differs - proves it is the error path |
+| `filter_matrix.c` | per-filter leak matrix |
+| `FILING.md`, `issue-body.md` | the text filed upstream |

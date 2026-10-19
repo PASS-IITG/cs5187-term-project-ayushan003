@@ -92,3 +92,54 @@ index 599ee413..8ab14462 100644
  	free_data(f->data);
  	f->data = NULL;
  	return (ARCHIVE_OK);
+diff --git a/libarchive/archive_write_set_format_zip.c b/libarchive/archive_write_set_format_zip.c
+index b588e915..c0fb28fc 100644
+--- a/libarchive/archive_write_set_format_zip.c
++++ b/libarchive/archive_write_set_format_zip.c
+@@ -154,6 +154,7 @@ struct zip {
+ 	enum encryption  entry_encryption;
+ 	int entry_flags;
+ 	struct trad_enc_ctx tctx;
++	char deflate_valid;
+ 	char tctx_valid;
+ 	unsigned char trad_chkdat;
+ 	unsigned aes_vendor;
+@@ -1368,6 +1369,7 @@ archive_write_zip_header(struct archive_write *a, struct archive_entry *entry)
+ 			    "Can't init deflate compressor");
+ 			return (ARCHIVE_FATAL);
+ 		}
++		zip->deflate_valid = 1;
+ 		break;
+ #endif
+ #ifdef HAVE_BZLIB_H
+@@ -1883,6 +1885,7 @@ archive_write_zip_finish_entry(struct archive_write *a)
+ 			ret = __archive_write_output(a, zip->buf, remainder);
+ 			if (ret != ARCHIVE_OK)
+ 			{
++				zip->deflate_valid = 0;
+ 				deflateEnd(&zip->stream.deflate);
+ 				return (ret);
+ 			}
+@@ -1893,6 +1896,7 @@ archive_write_zip_finish_entry(struct archive_write *a)
+ 				break;
+ 			zip->stream.deflate.avail_out = (uInt)zip->len_buf;
+ 		}
++		zip->deflate_valid = 0;
+ 		deflateEnd(&zip->stream.deflate);
+ 		break;
+ #endif
+@@ -2254,6 +2258,14 @@ archive_write_zip_free(struct archive_write *a)
+ 	}
+ 	free(zip->buf);
+ 	archive_entry_free(zip->entry);
++#ifdef HAVE_ZLIB_H
++	/* If the archive went fatal before archive_write_zip_finish_entry()
++	 * ran, the per-entry deflate stream was never ended. */
++	if (zip->deflate_valid) {
++		zip->deflate_valid = 0;
++		deflateEnd(&zip->stream.deflate);
++	}
++#endif
+ 	if (zip->cctx_valid)
+ 		archive_encrypto_aes_ctr_release(&zip->cctx);
+ 	if (zip->hctx_valid)
