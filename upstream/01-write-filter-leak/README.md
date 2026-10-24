@@ -61,8 +61,8 @@ path does.
 | 33 format x filter combinations, after the patch | 0 leak |
 | normal successful archive | **byte-identical output** (105 bytes, same SHA-256 as pristine), no crash from the second `deflateEnd()` |
 | patch applies cleanly to pristine `origin/master` `7f149b10` | yes |
-| `libarchive_test` on the revised patch | **945 run, 0 failed**, 31,835,086 assertions, 0 failed, 220 skipped |
-| patch applies to current master `8509b99a` | yes |
+| `libarchive_test` on the revised patch, **on current master `8509b99a`** | **953 run, 0 failed**, 31,842,897 assertions, 0 failed, 222 skipped |
+| patch applies cleanly to `8509b99a` | yes (`git apply --check`) |
 
 ## Fix (revised after maintainer review)
 
