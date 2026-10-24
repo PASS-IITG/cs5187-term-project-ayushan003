@@ -1,144 +1,86 @@
 diff --git a/libarchive/archive_write_add_filter_gzip.c b/libarchive/archive_write_add_filter_gzip.c
-index b3be114b..0607b532 100644
+index b3be114b..e453cd9f 100644
 --- a/libarchive/archive_write_add_filter_gzip.c
 +++ b/libarchive/archive_write_add_filter_gzip.c
-@@ -66,6 +66,7 @@ struct gzip {
- 	unsigned char	*compressed;
- 	size_t		 compressed_buffer_size;
- 	unsigned long	 crc;
-+	int		 stream_valid;
- #else
- 	struct archive_write_program_data *pdata;
- #endif
-@@ -146,6 +147,17 @@ memerr:
+@@ -146,6 +146,17 @@ memerr:
  static int
  archive_compressor_gzip_free(struct archive_write_filter *f)
  {
 +#ifdef HAVE_ZLIB_H
 +	struct gzip *gzip = f->data;
 +
-+	/* If the filter was left in the FATAL state, archive_write_filters_close()
-+	 * skipped archive_compressor_gzip_close(), so the zlib stream was never
-+	 * ended. Release it here to avoid leaking the deflate state. */
-+	if (gzip != NULL && gzip->stream_valid) {
++	/* A filter left in the FATAL state is skipped by
++	 * __archive_write_filters_close(), so archive_compressor_gzip_close() -
++	 * the only caller of deflateEnd() - never ran. The compression buffer is
++	 * allocated before the stream is initialized and released again if that
++	 * initialization fails, so a non-NULL buffer means the stream is live. */
++	if (gzip != NULL && gzip->compressed != NULL)
 +		deflateEnd(&(gzip->stream));
-+		gzip->stream_valid = 0;
-+	}
 +#endif
  	free_data(f->data);
  	f->data = NULL;
  	return (ARCHIVE_OK);
-@@ -283,6 +295,7 @@ archive_compressor_gzip_open(struct archive_write_filter *f)
- 	    Z_DEFAULT_STRATEGY);
- 
- 	if (init_success == Z_OK) {
-+		gzip->stream_valid = 1;
- 		return (ret);
- 	}
- 
-@@ -359,6 +372,7 @@ archive_compressor_gzip_close(struct archive_write_filter *f)
- 		ret = __archive_write_filter(f->next_filter, trailer, 8);
- 	}
- 
-+	gzip->stream_valid = 0;
- 	switch (deflateEnd(&(gzip->stream))) {
- 	case Z_OK:
+@@ -308,6 +319,12 @@ archive_compressor_gzip_open(struct archive_write_filter *f)
  		break;
+ 	}
+ 
++	/* The compressor was not initialized, so release the buffer: a non-NULL
++	 * buffer is what tells archive_compressor_gzip_free() that there is a
++	 * deflate stream still to end. */
++	free(gzip->compressed);
++	gzip->compressed = NULL;
++
+ 	return (ARCHIVE_FATAL);
+ }
+ 
 diff --git a/libarchive/archive_write_add_filter_xz.c b/libarchive/archive_write_add_filter_xz.c
-index 599ee413..8ab14462 100644
+index 599ee413..af07a1cf 100644
 --- a/libarchive/archive_write_add_filter_xz.c
 +++ b/libarchive/archive_write_add_filter_xz.c
-@@ -111,6 +111,7 @@ struct xz {
- 	int64_t		 total_out;
- 	/* the CRC32 value of uncompressed data for lzip */
- 	uint32_t	 crc32;
-+	int		 stream_valid;
- };
- 
- static int	archive_compressor_xz_options(struct archive_write_filter *,
-@@ -271,8 +272,10 @@ archive_compressor_xz_init_stream(struct archive_write_filter *f,
- 
- 		ret = lzma_raw_encoder(&(xz->stream), xz->lzmafilters);
- 	}
--	if (ret == LZMA_OK)
-+	if (ret == LZMA_OK) {
-+		xz->stream_valid = 1;
+@@ -350,6 +350,11 @@ archive_compressor_xz_open(struct archive_write_filter *f)
+ 	if (ret == LZMA_OK) {
  		return (ARCHIVE_OK);
-+	}
- 
- 	switch (ret) {
- 	case LZMA_MEM_ERROR:
-@@ -456,6 +459,7 @@ archive_compressor_xz_close(struct archive_write_filter *f)
- 			    xz->compressed, 20);
- 		}
  	}
-+	xz->stream_valid = 0;
- 	lzma_end(&(xz->stream));
- 	return ret;
++	/* The encoder was not initialized, so release the buffer: a non-NULL
++	 * buffer is what tells archive_compressor_xz_free() that there is an
++	 * lzma stream still to end. */
++	free(xz->compressed);
++	xz->compressed = NULL;
+ 	return (ARCHIVE_FATAL);
  }
-@@ -463,6 +467,15 @@ archive_compressor_xz_close(struct archive_write_filter *f)
+ 
+@@ -463,6 +468,15 @@ archive_compressor_xz_close(struct archive_write_filter *f)
  static int
  archive_compressor_xz_free(struct archive_write_filter *f)
  {
 +	struct xz *xz = f->data;
 +
-+	/* If the filter was left in the FATAL state, __archive_write_filters_close()
-+	 * skipped archive_compressor_xz_close(), so the liblzma stream was never
-+	 * ended. Release it here to avoid leaking the encoder state. */
-+	if (xz != NULL && xz->stream_valid) {
-+		xz->stream_valid = 0;
++	/* A filter left in the FATAL state is skipped by
++	 * __archive_write_filters_close(), so archive_compressor_xz_close() -
++	 * the only caller of lzma_end() - never ran. The compression buffer is
++	 * allocated before the stream is initialized and released again if that
++	 * initialization fails, so a non-NULL buffer means the stream is live. */
++	if (xz != NULL && xz->compressed != NULL)
 +		lzma_end(&(xz->stream));
-+	}
  	free_data(f->data);
  	f->data = NULL;
  	return (ARCHIVE_OK);
 diff --git a/libarchive/archive_write_set_format_zip.c b/libarchive/archive_write_set_format_zip.c
-index b588e915..c0fb28fc 100644
+index b588e915..1f3980f6 100644
 --- a/libarchive/archive_write_set_format_zip.c
 +++ b/libarchive/archive_write_set_format_zip.c
-@@ -154,6 +154,7 @@ struct zip {
- 	enum encryption  entry_encryption;
- 	int entry_flags;
- 	struct trad_enc_ctx tctx;
-+	char deflate_valid;
- 	char tctx_valid;
- 	unsigned char trad_chkdat;
- 	unsigned aes_vendor;
-@@ -1368,6 +1369,7 @@ archive_write_zip_header(struct archive_write *a, struct archive_entry *entry)
- 			    "Can't init deflate compressor");
- 			return (ARCHIVE_FATAL);
- 		}
-+		zip->deflate_valid = 1;
- 		break;
- #endif
- #ifdef HAVE_BZLIB_H
-@@ -1883,6 +1885,7 @@ archive_write_zip_finish_entry(struct archive_write *a)
- 			ret = __archive_write_output(a, zip->buf, remainder);
- 			if (ret != ARCHIVE_OK)
- 			{
-+				zip->deflate_valid = 0;
- 				deflateEnd(&zip->stream.deflate);
- 				return (ret);
- 			}
-@@ -1893,6 +1896,7 @@ archive_write_zip_finish_entry(struct archive_write *a)
- 				break;
- 			zip->stream.deflate.avail_out = (uInt)zip->len_buf;
- 		}
-+		zip->deflate_valid = 0;
- 		deflateEnd(&zip->stream.deflate);
- 		break;
- #endif
-@@ -2254,6 +2258,14 @@ archive_write_zip_free(struct archive_write *a)
+@@ -2254,6 +2254,15 @@ archive_write_zip_free(struct archive_write *a)
  	}
  	free(zip->buf);
  	archive_entry_free(zip->entry);
 +#ifdef HAVE_ZLIB_H
-+	/* If the archive went fatal before archive_write_zip_finish_entry()
-+	 * ran, the per-entry deflate stream was never ended. */
-+	if (zip->deflate_valid) {
-+		zip->deflate_valid = 0;
++	/* archive_write_zip_header() initializes a deflate stream per entry and
++	 * archive_write_zip_finish_entry() is the only place that ends it, so an
++	 * archive that went fatal in between still holds one. The zip struct is
++	 * calloc()ed and zlib clears the stream state in deflateEnd(), so this is
++	 * safe whether or not the stream is currently live. */
++	if (zip->entry_compression == COMPRESSION_DEFLATE)
 +		deflateEnd(&zip->stream.deflate);
-+	}
 +#endif
  	if (zip->cctx_valid)
  		archive_encrypto_aes_ctr_release(&zip->cctx);

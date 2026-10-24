@@ -58,23 +58,34 @@ path does.
 
 | check | result |
 |---|---|
-| 187 leak inputs from the fuzzing campaign (46 gzip, 97 xz), replayed on the patched tree | 0 still leak |
-| normal successful archive (`close=0 free=0`, output unchanged) | no leak, no double `deflateEnd()` |
+| 33 format x filter combinations, after the patch | 0 leak |
+| normal successful archive | **byte-identical output** (105 bytes, same SHA-256 as pristine), no crash from the second `deflateEnd()` |
 | patch applies cleanly to pristine `origin/master` `7f149b10` | yes |
-| `libarchive_test` on the fully patched tree | **945 run, 0 failed**, 31,835,086 assertions, 0 failed |
+| `libarchive_test` on the revised patch | **945 run, 0 failed**, 31,835,086 assertions, 0 failed, 220 skipped |
+| patch applies to current master `8509b99a` | yes |
 
-## Fix
+## Fix (revised after maintainer review)
 
-`fix-write-filter-leak.patch` - 3 files, 40 insertions, 1 deletion. A
-`stream_valid` / `deflate_valid` flag is set when the compressor is initialized
-and cleared by `close()`; each `free()` releases the stream if `close()` never
-ran. It does not change *when* `close()` is called, so it cannot introduce extra
-writes down an already-failing filter chain.
+`fix-write-filter-leak.patch` - 3 files, 40 insertions, **no new struct fields**.
 
-This follows libarchive's own idiom: `archive_read_support_format_7zip.c` guards
-`lzma_end()` / `BZ2_bzDecompressEnd()` / `ZSTD_freeDStream()` with
-`lzstream_valid` / `bzstream_valid` / `zstdstream_valid`, and the zip writer
-already guards its crypto contexts with `cctx_valid` / `hctx_valid`.
+The first version added a `stream_valid` flag. Reviewer `stoeckmann` asked to
+avoid it: *"We can avoid a new flag if we release the compressed memory in case
+of initialization error in the open function. Then we can check in free if
+compressed is NULL or not."* That invariant holds, because the compression
+buffer is allocated **before** the stream is initialized:
+
+* gzip / xz: on an initialization failure, `open()` now releases `compressed`
+  and NULLs it. A non-NULL buffer therefore means the stream is live, and
+  `free()` ends it.
+* zip: the buffer is not tied to the stream's lifetime, but the existing
+  `entry_compression` field already says whether the entry used deflate, so no
+  flag is needed there either. The struct is `calloc()`ed and zlib clears the
+  stream state in `deflateEnd()`, so the check is safe either way.
+
+It does not change *when* `close()` is called, so it cannot introduce extra
+writes down an already-failing filter chain. The extra `deflateEnd()` /
+`lzma_end()` that `free()` performs after a successful `close()` is harmless:
+both libraries clear their stream state and return an error code.
 
 ## Relationship to other upstream work
 
@@ -98,3 +109,24 @@ already guards its crypto contexts with `cctx_valid` / `hctx_valid`.
 | `differential_test.c` | same sequence, only sink size differs - proves it is the error path |
 | `filter_matrix.c` | per-filter leak matrix |
 | `FILING.md`, `issue-body.md` | the text filed upstream |
+
+
+## Still outstanding: a third, separate defect (not in this PR)
+
+Replaying all 202 write-harness leak inputs against the patched tree leaves 44
+leaking - from a completely different site:
+
+```
+isoent_new   archive_write_set_format_iso9660.c:5106    240 bytes per directory entry
+```
+
+The iso9660 writer leaks its own `isoent` bookkeeping objects when the archive
+goes fatal. This is unrelated to compressor state and is deliberately **not**
+included in PR #3716, to keep that review focused. To be filed separately.
+
+### Correction to an earlier claim in this file
+
+An earlier revision recorded "187 leak inputs -> 0 still leak". That measurement
+was unreliable (a stale replay binary). The dependable results are the
+33-combination matrix and the per-filter matrix, both clean after the patch; the
+44 iso9660 leaks above were always a separate defect.
