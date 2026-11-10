@@ -84,6 +84,6 @@ written down, and both of us understand and can defend the whole of it.
 By signing below, each member confirms that the division above is accurate and
 that they can explain and defend any part of this project.
 
-Ayush Singh Chauhan (240101117): ______________________
+Ayush Singh Chauhan (240101117)
 
-Mehul Raj (240101125): ______________________
+Mehul Raj (240101125)
