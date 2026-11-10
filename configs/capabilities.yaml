@@ -1,0 +1,514 @@
+# configs/capabilities.yaml - what each engine actually supports, probed
+# from the real binary rather than assumed. The generator consults this so
+# it never emits a type, value or function the target lacks.
+#
+# Regenerate with:  python -m graft.generate.capabilities --probe turso
+#
+# GRAFT drives only Turso, so only the profiles it needs are kept here.
+capabilities:
+  sqlite:
+    dialect: sqlite
+    engine_commit: c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16c63f69aalt1
+    engine_version: 3.46.1
+    features:
+    - clause:case
+    - clause:distinct
+    - clause:filter
+    - clause:having
+    - clause:limit_offset
+    - clause:named_window
+    - clause:nulls_first
+    - clause:order_by_ordinal
+    - clause:subquery
+    - clause:values
+    - clause:window_frame_range
+    - clause:window_frame_rows
+    - cte:non_recursive
+    - cte:recursive
+    - ddl:add_column
+    - ddl:add_column_default
+    - ddl:add_column_not_null
+    - ddl:add_generated_column
+    - ddl:check_constraint
+    - ddl:desc_index
+    - ddl:expression_index
+    - ddl:index
+    - ddl:multi_column_index
+    - ddl:not_null
+    - ddl:partial_index
+    - ddl:primary_key
+    - ddl:rename_column
+    - ddl:unique_constraint
+    - ddl:unique_index
+    - join:cross
+    - join:full_outer
+    - join:left
+    - join:right
+    - op:exists
+    - op:in_subquery
+    - op:is_distinct_from
+    - op:row_value
+    - set:except
+    - set:intersect
+    - set:union
+    - set:union_all
+    - win:over
+    functions:
+    - agg:avg
+    - agg:count
+    - agg:group_concat
+    - agg:max
+    - agg:min
+    - agg:string_agg
+    - agg:sum
+    - agg:total
+    - fn:abs
+    - fn:ceil
+    - fn:ceiling
+    - fn:coalesce
+    - fn:concat
+    - fn:concat_ws
+    - fn:current_date
+    - fn:current_timestamp
+    - fn:date
+    - fn:exp
+    - fn:floor
+    - fn:ifnull
+    - fn:instr
+    - fn:json_array_length
+    - fn:json_extract
+    - fn:julianday
+    - fn:length
+    - fn:ln
+    - fn:log
+    - fn:log10
+    - fn:log2
+    - fn:lower
+    - fn:ltrim
+    - fn:mod
+    - fn:nullif
+    - fn:octet_length
+    - fn:pow
+    - fn:power
+    - fn:replace
+    - fn:round
+    - fn:rtrim
+    - fn:sign
+    - fn:sqrt
+    - fn:strftime
+    - fn:substr
+    - fn:substring
+    - fn:trim
+    - fn:trunc
+    - fn:typeof
+    - fn:upper
+    - win:cume_dist
+    - win:dense_rank
+    - win:first_value
+    - win:lag
+    - win:last_value
+    - win:lead
+    - win:nth_value
+    - win:ntile
+    - win:percent_rank
+    - win:rank
+    - win:row_number
+    probed_at: '2026-11-02'
+    types:
+      bigint:
+        alias_of: integer
+        declared: BIGINT
+        distinct: false
+        reported: integer
+      blob:
+        declared: BLOB
+        distinct: true
+        reported: blob
+      boolean:
+        alias_of: integer
+        declared: BOOLEAN
+        distinct: false
+        reported: integer
+      date:
+        alias_of: integer
+        declared: DATE
+        distinct: false
+        reported: integer
+      decimal:
+        alias_of: real
+        declared: DECIMAL(10,2)
+        distinct: false
+        reported: real
+      double:
+        alias_of: real
+        declared: DOUBLE
+        distinct: false
+        reported: real
+      float:
+        alias_of: real
+        declared: FLOAT
+        distinct: false
+        reported: real
+      hugeint:
+        alias_of: integer
+        declared: HUGEINT
+        distinct: false
+        reported: integer
+      integer:
+        declared: INTEGER
+        distinct: true
+        reported: integer
+      interval:
+        alias_of: integer
+        declared: INTERVAL
+        distinct: false
+        reported: integer
+      json:
+        alias_of: integer
+        declared: JSON
+        distinct: false
+        reported: integer
+      real:
+        declared: REAL
+        distinct: true
+        reported: real
+      smallint:
+        alias_of: integer
+        declared: SMALLINT
+        distinct: false
+        reported: integer
+      time:
+        alias_of: integer
+        declared: TIME
+        distinct: false
+        reported: integer
+      timestamp:
+        alias_of: integer
+        declared: TIMESTAMP
+        distinct: false
+        reported: integer
+      tinyint:
+        alias_of: integer
+        declared: TINYINT
+        distinct: false
+        reported: integer
+      ubigint:
+        alias_of: integer
+        declared: UBIGINT
+        distinct: false
+        reported: integer
+      uinteger:
+        alias_of: integer
+        declared: UINTEGER
+        distinct: false
+        reported: integer
+      utinyint:
+        alias_of: integer
+        declared: UTINYINT
+        distinct: false
+        reported: integer
+      uuid:
+        alias_of: integer
+        declared: UUID
+        distinct: false
+        reported: integer
+      varchar:
+        declared: VARCHAR
+        distinct: true
+        reported: text
+    values:
+      empty_string:
+        accepted: true
+        expression: ''''''
+        preserved: true
+      infinity:
+        accepted: true
+        expression: CAST('Infinity' AS DOUBLE)
+        preserved: false
+      int64_max:
+        accepted: true
+        expression: CAST(9223372036854775807 AS BIGINT)
+        preserved: true
+      int64_min:
+        accepted: true
+        expression: CAST(-9223372036854775808 AS BIGINT)
+        preserved: true
+      long_string:
+        accepted: false
+        expression: repeat('x', 1000)
+        preserved: false
+      nan:
+        accepted: true
+        expression: CAST('NaN' AS DOUBLE)
+        preserved: false
+      neg_infinity:
+        accepted: true
+        expression: CAST('-Infinity' AS DOUBLE)
+        preserved: false
+      negative_zero:
+        accepted: true
+        expression: CAST(-0.0 AS DOUBLE)
+        preserved: true
+      unicode_string:
+        accepted: true
+        expression: "'a\xE9\u4E2D'"
+        preserved: true
+  turso:
+    dialect: sqlite
+    engine_commit: UNKNOWN
+    engine_version: Turso 0.9.0-pre.2
+    features:
+    - clause:case
+    - clause:distinct
+    - clause:filter
+    - clause:having
+    - clause:limit_offset
+    - clause:named_window
+    - clause:nulls_first
+    - clause:order_by_ordinal
+    - clause:subquery
+    - clause:values
+    - clause:window_frame_range
+    - clause:window_frame_rows
+    - cte:non_recursive
+    - cte:recursive
+    - ddl:add_column
+    - ddl:add_column_default
+    - ddl:add_column_not_null
+    - ddl:add_generated_column
+    - ddl:check_constraint
+    - ddl:desc_index
+    - ddl:expression_index
+    - ddl:index
+    - ddl:multi_column_index
+    - ddl:not_null
+    - ddl:partial_index
+    - ddl:primary_key
+    - ddl:rename_column
+    - ddl:unique_constraint
+    - ddl:unique_index
+    - fn:generate_series
+    - join:cross
+    - join:full_outer
+    - join:lateral
+    - join:left
+    - join:right
+    - op:exists
+    - op:in_subquery
+    - op:is_distinct_from
+    - op:row_value
+    - set:except
+    - set:intersect
+    - set:union
+    - set:union_all
+    - win:over
+    functions:
+    - agg:avg
+    - agg:count
+    - agg:group_concat
+    - agg:max
+    - agg:median
+    - agg:min
+    - agg:stddev
+    - agg:string_agg
+    - agg:sum
+    - agg:total
+    - fn:abs
+    - fn:btrim
+    - fn:ceil
+    - fn:ceiling
+    - fn:char_length
+    - fn:character_length
+    - fn:coalesce
+    - fn:concat
+    - fn:concat_ws
+    - fn:current_date
+    - fn:current_timestamp
+    - fn:date
+    - fn:exp
+    - fn:floor
+    - fn:ifnull
+    - fn:instr
+    - fn:json_array_length
+    - fn:json_extract
+    - fn:julianday
+    - fn:length
+    - fn:ln
+    - fn:log
+    - fn:log10
+    - fn:log2
+    - fn:lower
+    - fn:lpad
+    - fn:ltrim
+    - fn:mod
+    - fn:nullif
+    - fn:octet_length
+    - fn:pow
+    - fn:power
+    - fn:repeat
+    - fn:replace
+    - fn:reverse
+    - fn:round
+    - fn:rpad
+    - fn:rtrim
+    - fn:sign
+    - fn:sqrt
+    - fn:strftime
+    - fn:strpos
+    - fn:substr
+    - fn:substring
+    - fn:trim
+    - fn:trunc
+    - fn:typeof
+    - fn:upper
+    - win:cume_dist
+    - win:dense_rank
+    - win:first_value
+    - win:lag
+    - win:last_value
+    - win:lead
+    - win:nth_value
+    - win:ntile
+    - win:percent_rank
+    - win:rank
+    - win:row_number
+    probed_at: '2026-11-02'
+    types:
+      bigint:
+        alias_of: integer
+        declared: BIGINT
+        distinct: false
+        reported: integer
+      blob:
+        declared: BLOB
+        distinct: true
+        reported: blob
+      boolean:
+        alias_of: integer
+        declared: BOOLEAN
+        distinct: false
+        reported: integer
+      date:
+        alias_of: integer
+        declared: DATE
+        distinct: false
+        reported: integer
+      decimal:
+        alias_of: real
+        declared: DECIMAL(10,2)
+        distinct: false
+        reported: real
+      double:
+        alias_of: real
+        declared: DOUBLE
+        distinct: false
+        reported: real
+      float:
+        alias_of: real
+        declared: FLOAT
+        distinct: false
+        reported: real
+      hugeint:
+        alias_of: integer
+        declared: HUGEINT
+        distinct: false
+        reported: integer
+      integer:
+        declared: INTEGER
+        distinct: true
+        reported: integer
+      interval:
+        alias_of: integer
+        declared: INTERVAL
+        distinct: false
+        reported: integer
+      json:
+        alias_of: integer
+        declared: JSON
+        distinct: false
+        reported: integer
+      real:
+        declared: REAL
+        distinct: true
+        reported: real
+      smallint:
+        alias_of: integer
+        declared: SMALLINT
+        distinct: false
+        reported: integer
+      time:
+        alias_of: integer
+        declared: TIME
+        distinct: false
+        reported: integer
+      timestamp:
+        alias_of: integer
+        declared: TIMESTAMP
+        distinct: false
+        reported: integer
+      tinyint:
+        alias_of: integer
+        declared: TINYINT
+        distinct: false
+        reported: integer
+      ubigint:
+        alias_of: integer
+        declared: UBIGINT
+        distinct: false
+        reported: integer
+      uinteger:
+        alias_of: integer
+        declared: UINTEGER
+        distinct: false
+        reported: integer
+      utinyint:
+        alias_of: integer
+        declared: UTINYINT
+        distinct: false
+        reported: integer
+      uuid:
+        alias_of: integer
+        declared: UUID
+        distinct: false
+        reported: integer
+      varchar:
+        declared: VARCHAR
+        distinct: true
+        reported: text
+    values:
+      empty_string:
+        accepted: true
+        expression: ''''''
+        preserved: true
+      infinity:
+        accepted: true
+        expression: CAST('Infinity' AS DOUBLE)
+        preserved: false
+      int64_max:
+        accepted: true
+        expression: CAST(9223372036854775807 AS BIGINT)
+        preserved: true
+      int64_min:
+        accepted: true
+        expression: CAST(-9223372036854775808 AS BIGINT)
+        preserved: true
+      long_string:
+        accepted: true
+        expression: repeat('x', 1000)
+        preserved: true
+      nan:
+        accepted: true
+        expression: CAST('NaN' AS DOUBLE)
+        preserved: false
+      neg_infinity:
+        accepted: true
+        expression: CAST('-Infinity' AS DOUBLE)
+        preserved: false
+      negative_zero:
+        accepted: true
+        expression: CAST(-0.0 AS DOUBLE)
+        preserved: false
+      unicode_string:
+        accepted: true
+        expression: "'a\xE9\u4E2D'"
+        preserved: true
