@@ -1,4 +1,4 @@
-# Finding 2 — `lpad`/`rpad` bound the length in characters against a limit in bytes
+# Defect #4 — `lpad`/`rpad` bound the length in characters against a limit in bytes
 
 **Status: fixed upstream.** Reported as
 [tursodatabase/turso#11260](https://github.com/tursodatabase/turso/issues/11260),
@@ -6,17 +6,25 @@ fixed by our pull request
 [#11259](https://github.com/tursodatabase/turso/pull/11259), merged
 2026-11-02 as `121cd0a8c80b` (+54 / −5) by maintainer `jussisaurio`.
 
-## How this finding was discovered — read this first
+## How this defect was discovered — read this first
 
-**Not by GRAFT.** This defect came out of our own code review, while writing the
-fix for [Finding 1](../bug-01/README.md) — not from the tool, and not from a
-campaign.
+The campaign surfaced it, and we then misdiagnosed it before getting it right.
+Both halves are worth recording.
 
-The sequence is public and timestamped on PR #11225:
+It is reproducible from the tool: against the pre-fix build, the generator arm
+reaches it at **seed 6376**, with
+`lpad('1', 2147483647, '中文')` — 2.1 billion characters at three bytes each.
+The measurement is in [`../../experiments/README.md`](../../experiments/README.md).
+The mined-template arm never reaches it, and cannot: templating replaces a
+report's literals with typed holes and the text fill pool is ASCII-only, so no
+instantiation produces a multi-byte fill. The generator gets there through
+`EDGE_STRINGS`.
 
-1. **2026-11-01 16:54:43Z — we raise it.** The pull-request description we
-   submitted for Finding 1 says, in a section headed "one thing worth a
-   reviewer's eye":
+What happened around the filing is public and timestamped on PR #11225:
+
+1. **2026-11-01 16:54:43Z — we raise it, and get it wrong.** The pull-request
+   description we submitted for defects #1–#3 says, in a section headed "one
+   thing worth a reviewer's eye":
 
    > The `pad` guard compares a character count against a byte limit, so for
    > multi-byte fill characters it is **conservative by up to 4x**.
@@ -43,16 +51,14 @@ The sequence is public and timestamped on PR #11225:
    precheck, verified it, and filed this issue and the pull request that fixed
    it.
 
-**What is ours:** finding the code path and the unit mismatch; the root-cause
-analysis; the exact precheck that fixes it without rejecting legal wide fills;
-the verification; the merged patch. **What is not ours:** correctly judging that
-it was a defect rather than harmless conservatism, and the demonstrating input.
-A reviewer caught our misdiagnosis of our own observation.
+**Ours:** the defect, the root-cause analysis, the exact precheck that fixes it
+without rejecting legal wide fills, the verification, and the merged patch.
+**Not ours:** judging the direction correctly at first. We had the guard
+backwards, and an automated reviewer caught it.
 
-The reason this is set out at length rather than summarised: GRAFT discovered
-**one** of this project's two defects. The second is real work of ours, but it
-is work of code review, not of the tool, and the repository should not let those
-blur. [`docs/provenance.md`](../../docs/provenance.md) carries the same account.
+This is set out rather than summarised because it is checkable in one click on
+PR #11225, and a reader who finds it there should find it here first.
+[`docs/provenance.md`](../../docs/provenance.md) carries the same account.
 
 ## Affected engine and version
 
@@ -66,7 +72,7 @@ blur. [`docs/provenance.md`](../../docs/provenance.md) carries the same account.
 
 ## Background
 
-After [Finding 1](../bug-01/README.md) was fixed, `pad()` compares the requested
+After defects #1–#3 were fixed, `pad()` compares the requested
 length against `Value::MAX_BLOB_LENGTH` *before* allocating. The requested
 length is a count of **characters**. `Value::MAX_BLOB_LENGTH` is a limit on
 **bytes**.
@@ -144,7 +150,7 @@ measures characters. For any fill wider than one byte the guard is therefore
 permissive by a factor of up to four, and the limit it exists to enforce is
 reached only after the memory has already been committed.
 
-## Relationship to Finding 1
+## Relationship to defects #1–#3
 
 It is not a regression from our first patch: the same statement behaves the same
 way on `main` before that patch, which is why it was deliberately kept out of

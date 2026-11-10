@@ -127,8 +127,9 @@ makes the campaign driver able to run either source, selected by `--mode`:
 | `fuzzer` | the generator only |
 | `both` | either, per case |
 
-Both findings reported here arrived in `both` mode, from the template side.
-`docs/evaluation.md` reports what the generator side produced.
+The defects reported here arrived in `both` mode. Which source reaches which
+defect, at equal budget, is measured in `experiments/README.md` and reported
+under RQ3 in `docs/evaluation.md`.
 
 ## 5. The oracle
 
@@ -163,19 +164,19 @@ correct engine and on invalid SQL.
 ## 6. From a hit to a report
 
 A violation is not a finding. `graft/triage/` takes it through four steps, all
-of which were applied to Finding 1:
+of which were applied to defect #1:
 
 1. **Reduce** (`reduce.py`). Shrink the statement while preserving the same
    violation, AST-aware through `sqlglot` where it parses and textual where it
-   does not. Finding 1 went from a four-call generated query to a single
+   does not. defect #1 went from a four-call generated query to a single
    statement, ratio 0.939, in five executions.
 2. **Re-verify** (`verify.py`). Replay on a *freshly started* engine process to
    exclude accumulated state, and then on a build of current upstream `main` to
-   exclude "already fixed". Finding 1 was re-confirmed on `b588fbdc6`, built
+   exclude "already fixed". defect #1 was re-confirmed on `b588fbdc6`, built
    2026-11-01, before it was filed.
 3. **Duplicate search** (`dupecheck.py`). Query the upstream tracker and
    **record the queries used**, so the search is auditable rather than asserted.
-   For Finding 1: `repo:tursodatabase/turso "lpad" crash`, `"rpad" crash`,
+   For defect #1: `repo:tursodatabase/turso "lpad" crash`, `"rpad" crash`,
    `"abc" crash`, `"crash" in:title`. The nearest existing issue, #11175, is
    about wrong argument counts panicking — a different defect.
 4. **Draft** (`report.py`), then a human reads it, reproduces it, and decides

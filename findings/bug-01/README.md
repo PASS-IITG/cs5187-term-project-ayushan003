@@ -1,4 +1,4 @@
-# Finding 1 — `lpad`/`rpad`/`repeat` allocate before checking the length limit
+# Defects #1–#3 — `lpad`, `rpad` and `repeat` allocate before checking the length limit
 
 **Status: fixed upstream.** Reported as
 [tursodatabase/turso#11219](https://github.com/tursodatabase/turso/issues/11219),

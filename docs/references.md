@@ -85,7 +85,7 @@ decision named. The rest are positioning.
   `docs/evaluation.md` §2; the literal policy quoted is
   `sql_gen/src/policy.rs`, `impl Default for LiteralConfig`.
 - **DuckDB** — `duckdb/duckdb`. The corpus source; never executed here.
-  <https://github.com/duckdb/duckdb>. The report both findings' shape came from
+  <https://github.com/duckdb/duckdb>. The report the first three defects' shape came from
   is [duckdb/duckdb#27846](https://github.com/duckdb/duckdb/issues/27846).
 - **SQLite** — stdlib `sqlite3` 3.46.1, used as the backing store for the
   planted-bug test engine only.
@@ -95,8 +95,8 @@ decision named. The rest are positioning.
 
 | | Issue | Our pull request | State |
 |---|---|---|---|
-| Finding 1 | [turso#11219](https://github.com/tursodatabase/turso/issues/11219) | [turso#11225](https://github.com/tursodatabase/turso/pull/11225) | **merged**, `ec86571642a6` |
-| Finding 2 | [turso#11260](https://github.com/tursodatabase/turso/issues/11260) | [turso#11259](https://github.com/tursodatabase/turso/pull/11259) | **merged**, `121cd0a8c80b` |
+| defect #1 | [turso#11219](https://github.com/tursodatabase/turso/issues/11219) | [turso#11225](https://github.com/tursodatabase/turso/pull/11225) | **merged**, `ec86571642a6` |
+| defect #4 | [turso#11260](https://github.com/tursodatabase/turso/issues/11260) | [turso#11259](https://github.com/tursodatabase/turso/pull/11259) | **merged**, `121cd0a8c80b` |
 
 A third report, [apache/datafusion#27001](https://github.com/apache/datafusion/issues/27001)
 with our pull request [#27002](https://github.com/apache/datafusion/pull/27002),

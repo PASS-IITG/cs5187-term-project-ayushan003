@@ -1,4 +1,4 @@
-"""``python -m graft.reproduce`` — replay the chain that produced Finding 1.
+"""``python -m graft.reproduce`` — replay the chain that produced defect #1.
 
 This is the headline result, start to finish, in one command. It is deterministic:
 every random choice comes from a seeded generator, so the output is the same on
@@ -42,7 +42,7 @@ from graft.corpus.templates import instantiate, load_templates
 
 #: the DuckDB report the shape comes from. Its fix test carried four
 #: statements, all of which became templates; this is the one that reached
-#: Finding 1.
+#: defect #1.
 SOURCE_ISSUE = 27846
 SOURCE_REPO = "duckdb/duckdb"
 SOURCE_QUERY = (
@@ -50,7 +50,7 @@ SOURCE_QUERY = (
     "LPAD('x', 3, '\U0001F600ab'), RPAD('x', 3, '\U0001F600ab')"
 )
 
-#: Finding 1, as filed
+#: defect #1, as filed
 FINDING_1 = "select LPAD('a', 9223372036854775807, 'b');"
 
 #: the seed whose fill reaches the defect
@@ -80,7 +80,7 @@ def rule(title: str) -> None:
 
 
 def source_repro() -> dict:
-    """Return the mined DuckDB report whose shape both findings came from."""
+    """Return the mined DuckDB report whose shape the first defects came from."""
     path = REPO_ROOT / "data" / "repros" / "duckdb.jsonl"
     for line in path.read_text(encoding="utf-8").splitlines():
         record = json.loads(line)
@@ -148,7 +148,7 @@ def step_4_blind_spot() -> None:
     print(f"   2. integers     int_max is 1_000_000. {BOUNDARY}")
     print("                   is outside the domain it draws from.")
     print("   3. strings      StringCharset::Alphanumeric cannot produce the")
-    print("                   multi-byte fill Finding 2 needs.")
+    print("                   multi-byte fill Defect #4 needs.")
     print("   4. oracle       SQLite has no LPAD, so a SQLite-differential")
     print("                   oracle could not judge the answer even if the")
     print("                   statement were generated.")
@@ -204,9 +204,9 @@ def step_5_defect(query: str) -> None:
     print(f"  post-fix 7f0a9e6f4  {post}")
 
     for label, sql, mem_kb in (
-        ("Finding 1  select LPAD('a', 9223372036854775807, 'b')", FINDING_1, None),
+        ("defect #1  select LPAD('a', 9223372036854775807, 'b')", FINDING_1, None),
         (
-            "Finding 2  SELECT length(LPAD('a', 1000000000, '\U0001F600'))",
+            "defect #4  SELECT length(LPAD('a', 1000000000, '\U0001F600'))",
             "SELECT length(LPAD('a', 1000000000, '\U0001F600'));",
             6_000_000,
         ),
@@ -227,12 +227,12 @@ def step_5_defect(query: str) -> None:
 
 def step_6_upstream() -> None:
     rule("UPSTREAM")
-    print("  Finding 1  issue  tursodatabase/turso#11219   closed")
+    print("  defect #1  issue  tursodatabase/turso#11219   closed")
     print("             our PR tursodatabase/turso#11225   MERGED  ec86571642a6  +138/-41")
-    print("  Finding 2  issue  tursodatabase/turso#11260   closed")
+    print("  defect #4  issue  tursodatabase/turso#11260   closed")
     print("             our PR tursodatabase/turso#11259   MERGED  121cd0a8c80b  +54/-5")
-    print("\n  Finding 2 was not found by GRAFT. We found it by reading the function")
-    print("  we were patching for Finding 1, recorded it as harmless, and an")
+    print("\n  defect #4 was not found by GRAFT. We found it by reading the function")
+    print("  we were patching for defect #1, recorded it as harmless, and an")
     print("  automated reviewer on our own pull request corrected that judgement")
     print("  before we diagnosed and fixed it. See docs/provenance.md.")
     print("\n  Full write-ups: findings/bug-01/README.md, findings/bug-02/README.md")
@@ -240,7 +240,7 @@ def step_6_upstream() -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Replay the chain that produced Finding 1."
+        description="Replay the chain that produced defect #1."
     )
     parser.add_argument(
         "--skip-engines", action="store_true",

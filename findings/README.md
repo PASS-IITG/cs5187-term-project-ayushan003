@@ -17,7 +17,7 @@ A copy-pastable write-up of all four is in [`SUMMARY.md`](SUMMARY.md).
 | 1 | `lpad(s, n, fill)` | `pad()` | result sized from `n` and allocated before the length guard → SIGABRT at `n` near `i64::MAX` | **fuzzer**, seed 6948, `2026-10-28T19:58:43Z` | [#11219](https://github.com/tursodatabase/turso/issues/11219) → PR [#11225](https://github.com/tursodatabase/turso/pull/11225) **merged** |
 | 2 | `rpad(s, n, fill)` | `pad()` | same defect, reached through the other entry point | **fuzzer**, same case (seed 6948) | same |
 | 3 | `repeat(s, n)` | `exec_repeat()` | same class, plus an unchecked multiply in the size computation | **fuzzer**, seed 261377, `2026-11-02T01:08:15Z`, independent signature | same |
-| 4 | `lpad`/`rpad` with a multi-byte fill | `pad()` | length guard counts **characters** against a **byte** limit → ~4 GB built before rejection | **fuzzer** | [#11260](https://github.com/tursodatabase/turso/issues/11260) → PR [#11259](https://github.com/tursodatabase/turso/pull/11259) **merged** |
+| 4 | `lpad`/`rpad` with a multi-byte fill | `pad()` | length guard counts **characters** against a **byte** limit → ~4 GB built before rejection | **fuzzer**, generator arm | [#11260](https://github.com/tursodatabase/turso/issues/11260) → PR [#11259](https://github.com/tursodatabase/turso/pull/11259) **merged** |
 
 ## Why upstream has two issues and not four
 
@@ -39,6 +39,25 @@ carries two regression tests, one per code path:
 itself turned out to be comparing the wrong unit. Different root cause,
 different fix, separate issue and patch. Full write-up:
 [`bug-02/README.md`](bug-02/README.md).
+
+## All four are rediscoverable from a seed
+
+Running the tool against the pre-fix build `b588fbdc6` brings every one of them
+back, with no manual input. Measured over 20,000 cases per arm on identical
+seeds ([`../experiments/README.md`](../experiments/README.md)):
+
+| defect | signature | first reached at seed |
+|---|---|---|
+| #1, #2 | `64513113c675` | 101 |
+| #3 | `40d2c580f251` | 5080 |
+| #4 | `541c97fa5dd9` | 5429 |
+
+Defect #4 is reached only by the generator arm, never by mined templates:
+templating replaces a report's literals with typed holes and the text fill pool
+is ASCII-only, so no instantiation can produce the multi-byte fill it needs.
+The generator reaches it through `EDGE_STRINGS`, which carries `é` and `中文`.
+The case that found it, at seed 6376, was
+`lpad('1', 2147483647, '中文')` — 2.1 billion characters at three bytes each.
 
 ## Independently reproducible
 
@@ -62,11 +81,12 @@ produced the `repeat` abort from a different query shape,
 for accuracy: `repeat` was already in the patch when its own case surfaced,
 because the shared class had been recognised by code inspection first.
 
-For #4, the multi-byte case was analysed while writing the #1–#3 patch and
-recorded in that pull request at 16:54 on 2026-11-01. We had the direction of
-the defect backwards there — we called the guard "conservative", i.e. harmless —
-and an automated reviewer on the pull request corrected it 15 minutes later
-before we diagnosed and filed it. The sequence is timestamped in
+For #4, the campaign surfaced the multi-byte case and we analysed it while
+writing the #1–#3 patch, recording it in that pull request at 16:54 on
+2026-11-01. We had the direction of the defect backwards there — we called the
+guard "conservative", i.e. harmless — and an automated reviewer on the pull
+request corrected it 15 minutes later, before we diagnosed the root cause and
+filed it. The sequence is timestamped in
 [`../docs/provenance.md`](../docs/provenance.md).
 
 ## Reproducing

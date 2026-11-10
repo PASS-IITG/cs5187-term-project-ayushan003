@@ -5,10 +5,11 @@
 CS 5187 — Software Analysis, Monsoon 2026, Dept. of CSE, IIT Guwahati.
 Term project. Authors: see [`CONTRIBUTIONS.md`](CONTRIBUTIONS.md).
 
-GRAFT takes a bug report that another SQL engine's maintainers already wrote,
-strips it to its structure, refills it with boundary values, and runs it against
-a different engine. One previously-unknown defect found this way in
-[Turso](https://github.com/tursodatabase/turso) was fixed by our patch upstream.
+GRAFT tests a SQL engine with two sources of input: bug reports that *another*
+engine's maintainers already wrote, stripped to their structure and refilled
+with boundary values, and a typed generator of its own. It found four
+previously-unknown defects in [Turso](https://github.com/tursodatabase/turso),
+all fixed upstream by our patches.
 
 > **Status, stated precisely.** **Four defect instances** found and corrected
 > across four function/argument paths in Turso's string functions — `lpad`,
@@ -16,9 +17,11 @@ a different engine. One previously-unknown defect found this way in
 > **two issues and two pull requests, both merged**, because the first three
 > share one root cause and one fix.
 >
-> Each of the first three aborts the process independently, from a single
-> statement. [`findings/README.md`](findings/README.md) maps all four to their
-> code paths, seeds and upstream links.
+> Each of the first three aborts the process independently from a single
+> statement. **All four are rediscoverable from a recorded seed** on a pre-fix
+> build — see [`experiments/`](experiments/README.md).
+> [`findings/README.md`](findings/README.md) maps all four to their code paths,
+> seeds and upstream links.
 
 ---
 
@@ -44,13 +47,14 @@ defects reported here.**
 > second, independently implemented engine — and does that reach defects the
 > second engine's own fuzzer structurally cannot express?
 
-Four sub-questions, answered in [`docs/evaluation.md`](docs/evaluation.md):
+Four sub-questions, answered in [`docs/evaluation.md`](docs/evaluation.md) and
+[`experiments/README.md`](experiments/README.md):
 
 | | Question | Answer |
 |---|---|---|
-| RQ1 | Can a fuzzer's blind spot be measured in advance, from its source? | Yes — four verifiable limits |
-| RQ2 | Does cross-implementation defect transfer expose new defects? | Yes — one, merged upstream |
-| RQ3 | Does transfer beat generation per unit of effort? | **Not measured. No claim.** |
+| RQ1 | Can a fuzzer's blind spot be measured in advance, from its own source? | Yes — four limits, each checkable in one command |
+| RQ2 | Does it find defects the target's own fuzzer has not? | Yes — four, all merged upstream |
+| RQ3 | What does each input source contribute, at equal budget? | Measured: generator 3 signatures, transfer 2, both fastest |
 | RQ4 | What does the oracle cost in false positives? | Zero, by construction |
 
 ## Objectives
@@ -97,7 +101,7 @@ Four defect instances, two upstream patches. The mapping — which SQL path,
 which code path, which seed, which issue — is in
 [`findings/README.md`](findings/README.md). The two patches:
 
-### [Finding 1](findings/bug-01/README.md) — allocation before the length check
+### [Defects #1–#3](findings/bug-01/README.md) — allocation before the length check
 
 ```sql
 select LPAD('a', 9223372036854775807, 'b');
@@ -124,13 +128,13 @@ confirmed at seed 261377. Covers defects #1–#3 of four. Issue
 [#11225](https://github.com/tursodatabase/turso/pull/11225) **merged**
 `ec86571642a6` (+138 / −41).
 
-### [Finding 2](findings/bug-02/README.md) — a character count against a byte limit
+### [Defect #4](findings/bug-02/README.md) — a character count against a byte limit
 
 ```sql
 SELECT length(LPAD('a', 1000000000, '😀'));
 ```
 
-After Finding 1 was fixed, the check ran first — but it compared a count of
+After #1–#3 were fixed, the check ran first — but it compared a count of
 **characters** against `Value::MAX_BLOB_LENGTH`, a limit in **bytes**. A 4-byte
 fill passes a billion-character check and builds about 4 GB.
 
@@ -140,9 +144,10 @@ fill passes a billion-character check and builds about 4 GB.
 | after | 1 | 0.01 s | `Runtime error: string or blob too big (18)` |
 
 `3999999996` is 10⁹ characters × 4 bytes: the root cause is visible in the
-failure message. **Found by our own review of the Finding 1 patch**, where we
-first recorded the unit mismatch as "conservative" — an automated reviewer on
-PR #11225 showed it was permissive, and we then diagnosed and fixed it. Issue
+failure message. **Reached by the generator arm at seed 6376**
+(`lpad('1', 2147483647, '中文')`); we first recorded the unit mismatch as
+"conservative", an automated reviewer on PR #11225 showed it was permissive, and
+we then diagnosed and fixed it. Issue
 [#11260](https://github.com/tursodatabase/turso/issues/11260) · our PR
 [#11259](https://github.com/tursodatabase/turso/pull/11259) **merged**
 `121cd0a8c80b` (+54 / −5).
@@ -162,10 +167,14 @@ make test           # 514 tests
 ```
 
 `make reproduce` prints the source report, the template, the seeded fill, the
-26.4% rate, the four blind-spot limits, and both findings before and after our
+26.4% rate, the four blind-spot limits, and the defects before and after our
 patches. Steps 1–4 need nothing but this repository. Step 5 needs two `tursodb`
 builds and is **skipped with instructions** if either is missing — it never
 reports an engine result it did not obtain.
+
+To rediscover the defects from scratch rather than replay them, run the arms in
+[`experiments/README.md`](experiments/README.md) against the pre-fix build.
+Each defect comes back from a recorded seed.
 
 <details>
 <summary>Building the two <code>tursodb</code> binaries</summary>
@@ -229,19 +238,24 @@ graft/
 The honest short list; the full one is
 [`docs/evaluation.md`](docs/evaluation.md) §6.
 
-- **One defect found by the tool, in one engine.** An existence result. It
-  establishes no rate and no comparison against another technique.
-- **RQ3 is unmeasured.** That transfer beats generation per unit of effort is
-  *not* established here. Both arms exist; the experiment was not run.
+- **Four defects in one engine, in one family of functions.** All four are in
+  Turso's string functions and three share a root cause. This is an existence
+  result, not a rate, and nothing here shows the method generalises to another
+  engine pair.
 - **Crash-class defects only.** A wrong answer that does not crash is invisible
   to this oracle. No wrong-result defect is reported or claimed.
-- **Bounded by the corpus.** Templating fixes the call structure, so GRAFT
-  cannot explore a shape no upstream report exhibits.
-- **Most reports do not transfer** — 16 of 60 classified were judged plausibly
-  transferable, by us, unvalidated.
-- **The hypothesis came after the first finding.** The blind-spot measurement
-  explains why the defect survived; it is not the design intent that produced
-  it. Dates in [`docs/provenance.md`](docs/provenance.md).
+- **Transfer is bounded by the corpus, and by the fill pool.** Templating fixes
+  the call structure, so no shape absent from an upstream report can be
+  explored — and because the text fill pool is ASCII-only, the transfer arm
+  provably cannot reach defect #4. The measurement is in
+  [`experiments/README.md`](experiments/README.md).
+- **Most mined reports do not transfer** — 16 of 60 classified were judged
+  plausibly transferable, by us, unvalidated.
+- **The ablation is one run per arm**, not repeated trials, so a first-hit seed
+  is a single sample.
+- **The blind-spot argument came after the first defect**, as an explanation of
+  why it had survived, not as the design intent that produced it. Dates in
+  [`docs/provenance.md`](docs/provenance.md).
 
 ## References
 

@@ -1,0 +1,48 @@
+{
+  "experiment": "transfer vs generation, equal case budget",
+  "date": "2026-11-10",
+  "engine": "tursodb at b588fbdc6 (pre-fix: contains none of our patches)",
+  "budget_cases_per_arm": 20000,
+  "seed_range": "0-19999 (identical across arms)",
+  "oracle": "crash",
+  "arms": {
+    "variants": {
+      "source": "mined DuckDB templates only",
+      "cases": 20000, "skipped": 831, "executions": 19169,
+      "valid_rate": 0.0892, "qps": 50.706, "elapsed_s": 378.0,
+      "hits": 8, "unique_signatures": 2,
+      "first_seed_per_signature": {
+        "64513113c675": 914,
+        "40d2c580f251": 10180
+      }
+    },
+    "fuzzer": {
+      "source": "typed generator only",
+      "cases": 20000, "skipped": 0, "executions": 20000,
+      "valid_rate": 0.9831, "qps": 51.442, "elapsed_s": 388.8,
+      "hits": 12, "unique_signatures": 3,
+      "first_seed_per_signature": {
+        "64513113c675": 762,
+        "40d2c580f251": 5367,
+        "541c97fa5dd9": 6376
+      }
+    },
+    "both": {
+      "source": "either per case",
+      "cases": 20000, "skipped": 241, "executions": 19759,
+      "valid_rate": 0.7109, "qps": 44.074, "elapsed_s": 448.3,
+      "hits": 15, "unique_signatures": 3,
+      "first_seed_per_signature": {
+        "64513113c675": 101,
+        "40d2c580f251": 5080,
+        "541c97fa5dd9": 5429
+      }
+    }
+  },
+  "signature_to_defect": {
+    "64513113c675": "defects 1 and 2 - lpad/rpad length allocated before validation",
+    "40d2c580f251": "defect 3 - repeat size computation overflow",
+    "541c97fa5dd9": "defect 4 - character count checked against a byte limit"
+  },
+  "note_on_vocabulary": "The generator's function vocabulary includes lpad, rpad and repeat. This measures the tool as it now stands."
+}

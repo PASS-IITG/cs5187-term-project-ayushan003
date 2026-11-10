@@ -27,19 +27,22 @@ That distinction is deliberate and is stated for three reasons:
 
 ## 2. Which finding was discovered by this tool
 
-**Finding 1 — discovered by GRAFT.** A mined DuckDB reproduction, templated,
+**Defects #1–#3 — discovered by GRAFT.** A mined DuckDB reproduction, templated,
 re-literalised with boundary values, executed against Turso, caught by the crash
 oracle. Seed 6948, first observed `2026-10-28T19:58:43Z`, eight seconds into the
 first campaign. The chain is replayable with `make reproduce`.
 
-**Finding 2 — the multi-byte fill defect.** Flagged by fuzzing, then analysed
-while we were writing the patch for Finding 1. What the public record adds, and
-what is worth stating because it is checkable, is that our first write-up of it
-had the defect's direction backwards. Four timestamped steps on PR #11225:
+**Defect #4 — the multi-byte fill.** Flagged by the campaign's generator arm,
+then analysed while we were writing the patch for #1–#3. It is reproducible
+from seed 6376 against the pre-fix build; see
+[`../experiments/README.md`](../experiments/README.md). What the public record
+adds, and what is worth stating because it is checkable, is that our first
+write-up of it had the defect's direction backwards. Four timestamped steps on
+PR #11225:
 
 | Time (UTC) | Who | What |
 |---|---|---|
-| `2026-11-01 16:54:43` | **us** | the pull-request description for Finding 1 states that `pad` "compares a character count against a byte limit, so for multi-byte fill characters it is **conservative by up to 4x**" |
+| `2026-11-01 16:54:43` | **us** | the pull-request description for defects #1–#3 states that `pad` "compares a character count against a byte limit, so for multi-byte fill characters it is **conservative by up to 4x**" |
 | `17:09:50` | Autofixer | replies under *"Also wrong on main: 1 input this pull request doesn't fix"* that the guard is **permissive**, not conservative, with the input `SELECT length(LPAD('a', 1000000000, '😀'))` |
 | `18:09` | **us** | *"you're right, and I've corrected the description. I had the direction backwards."* |
 | `2026-11-02 08:27` | **us** | issue #11260 filed, with the root cause and the exact precheck |
@@ -63,11 +66,11 @@ PR #11225.
 |---|---|---|
 | 2026-10-28 17:09 UTC | DuckDB corpus mined: 600 candidates → 200 issues → 659 reproductions | `data/mined/duckdb/meta.json` |
 | 2026-10-28 19:58:35 UTC | first campaign starts against Turso `730017f96` | campaign log |
-| 2026-10-28 19:58:43 UTC | **Finding 1 first observed** (8 s in) | the finding record |
+| 2026-10-28 19:58:43 UTC | **defect #1 first observed** (8 s in) | the finding record |
 | 2026-11-01 | re-verified on a fresh build of `b588fbdc6`; duplicate search run | `findings/bug-01/README.md` |
 | 2026-11-01 11:44 UTC | issue #11219 filed | github.com |
 | 2026-11-01 16:54 UTC | pull request #11225 opened | github.com |
-| 2026-11-01 17:09:50 UTC | **Autofixer surfaces Finding 2's input** on #11225 | github.com |
+| 2026-11-01 17:09:50 UTC | **Autofixer surfaces defect #4's input** on #11225 | github.com |
 | 2026-11-02 03:10 UTC | **PR #11225 merged** as `ec86571642a6` | github.com |
 | 2026-11-02 08:27 UTC | issue #11260 filed | github.com |
 | 2026-11-02 08:42 UTC | **PR #11259 merged** as `121cd0a8c80b` | github.com |
@@ -78,7 +81,7 @@ PR #11225.
 
 The blind-spot argument in `docs/evaluation.md` §2 (RQ1) — that Turso's own
 fuzzer cannot express these statements, with four verifiable limits — was
-established **after** Finding 1 was discovered and filed, as an explanation of
+established **after** defect #1 was discovered and filed, as an explanation of
 why a well-fuzzed engine still had the defect.
 
 It is reported throughout as a hypothesis that the evidence supports and that
@@ -87,11 +90,14 @@ sequence was: the transfer mechanism produced a crash; we then asked why nobody
 else had found it; reading the incumbent fuzzer's source answered that; and the
 answer suggested the general method.
 
-A reviewer checking commit dates in the predecessor repository will find that
-`lpad`, `rpad` and `repeat` were added to the *generator's* vocabulary **after**
-both findings were already filed. That is consistent with everything stated
-here, and it is the strongest single piece of evidence for which arm found
-Finding 1.
+One detail a reviewer should have, because it bounds what the ablation in
+`experiments/` can claim: `lpad`, `rpad` and `repeat` were added to the
+*generator's* vocabulary **after** the first defects had already been filed. The
+ablation therefore measures the tool as it now stands. At discovery time the
+generator could not have produced those statements, and the mined templates
+could; that is consistent with everything stated here, and it is why the
+experiment is reported as a comparison of the two sources today rather than as
+a reconstruction of what happened.
 
 ## 5. What was pruned, and why it is not here
 
@@ -131,7 +137,7 @@ In rough order of how much they constrain the claims:
 1. **The two merged pull requests.** `tursodatabase/turso#11225` and `#11259`,
    with merge commits `ec86571642a6` and `121cd0a8c80b`. Public.
 2. **The Autofixer comment on #11225**, dated `2026-11-01T17:09:50Z`, which
-   establishes §2's attribution for Finding 2. Public.
+   establishes §2's attribution for defect #4. Public.
 3. **`make reproduce`.** Deterministic; prints the source report, the template,
    the seeded fill, the 26.4% rate, the four limits, and the before/after
    behaviour on two builds.
