@@ -110,16 +110,16 @@ a feature: **GRAFT cannot explore any structure that no upstream report
 exhibits.** `docs/related-work.md` places this against Fuzzilli and RepairFuzz,
 which answer the same validity problem differently.
 
-## 4. The second generator, and why it exists
+## 4. The second case source: a typed generator
 
 `graft/generate/` is an independent, typed SQL generator: it builds a schema,
 populates it, and composes expressions and queries from a vocabulary gated by
 what the target engine actually supports (`configs/capabilities.yaml`, probed
 from the real binary rather than assumed).
 
-It is in the repository for two reasons. It supplies the comparison arm —
-without a generator there is nothing to compare transfer *against* — and it
-makes the campaign driver able to run either source, selected by `--mode`:
+It began as the comparison arm — without a generator there is nothing to
+compare transfer *against* — and it lets the campaign driver run either source,
+selected by `--mode`:
 
 | mode | cases come from |
 |---|---|
@@ -127,8 +127,13 @@ makes the campaign driver able to run either source, selected by `--mode`:
 | `fuzzer` | the generator only |
 | `both` | either, per case |
 
-The defects reported here arrived in `both` mode. Which source reaches which
-defect, at equal budget, is measured in `experiments/README.md` and reported
+The defects reported here arrived in `both` mode. Measuring the two sources
+separately, at equal budget, turned out to matter more than expected: the
+generator reaches three distinct defect signatures to the templates' two, and
+the one the templates miss they cannot reach at any seed, because templating
+draws text fills from an ASCII-only pool while the generator's `EDGE_STRINGS`
+carries real multi-byte values. So the "second" source is not the lesser one on
+this target. The run is in `experiments/README.md` and the result is reported
 under RQ3 in `docs/evaluation.md`.
 
 ## 5. The oracle
@@ -168,11 +173,11 @@ of which were applied to defect #1:
 
 1. **Reduce** (`reduce.py`). Shrink the statement while preserving the same
    violation, AST-aware through `sqlglot` where it parses and textual where it
-   does not. defect #1 went from a four-call generated query to a single
+   does not. Defect #1 went from a four-call generated query to a single
    statement, ratio 0.939, in five executions.
 2. **Re-verify** (`verify.py`). Replay on a *freshly started* engine process to
    exclude accumulated state, and then on a build of current upstream `main` to
-   exclude "already fixed". defect #1 was re-confirmed on `b588fbdc6`, built
+   exclude "already fixed". Defect #1 was re-confirmed on `b588fbdc6`, built
    2026-11-01, before it was filed.
 3. **Duplicate search** (`dupecheck.py`). Query the upstream tracker and
    **record the queries used**, so the search is auditable rather than asserted.

@@ -1,4 +1,4 @@
-"""``python -m triage.run``: reduce, verify, known-difference check, dupecheck.
+"""``python -m graft.triage.run``: reduce, verify, duplicate-search, draft.
 
 The pipeline a raw finding walks, in the order P09 fixes:
 

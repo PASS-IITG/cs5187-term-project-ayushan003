@@ -2,7 +2,7 @@
 
 This lived in ``variants/run.py``, the driver for the variant-hunter stage that
 is no longer part of the tool (see docs/RESEARCH_AUDIT.md §7). The record format
-is defined by docs/SPEC.md and is written by the campaign runner, so the builder
+is defined by docs/spec.md and is written by the campaign runner, so the builder
 belongs with the rest of triage.
 
 Only the SPEC's tool-settable fields are filled here. ``status`` comes from the

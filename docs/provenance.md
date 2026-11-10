@@ -8,29 +8,30 @@ take the rest of the documentation on trust.
 
 ## 1. How this repository relates to the work
 
-The investigation ran from **28 October to 3 November 2026**. This repository
-was **organised on 3 November 2026** from that work: the code, the corpus, the
-findings and the measurements are the originals, and the commit history here
-records the order in which they were *assembled into a coherent project*, not
-the order in which they were originally written.
+The investigation ran from **28 October to 10 November 2026**. The code, the
+corpus, the findings and the measurements in this repository are the originals.
+Its commit history records the order in which they were **assembled into a
+coherent project**, which is not the order in which every line was first
+written — an early commit may carry code that was drafted, used and revised
+before it was committed here in its finished form.
 
-That distinction is deliberate and is stated for three reasons:
+That distinction is stated rather than glossed, for two reasons:
 
-- **No commit here carries a false timestamp.** Nothing is backdated. Every
-  commit in this repository is dated when it was made.
-- **No commit claims an experiment was finished before it was.** The dates of
-  the actual experiments are in §3 below and are independently checkable against
-  the upstream issues and pull requests, which are public and timestamped.
-- **The predecessor repository retains the original chronology**, including the
-  work that was tried and abandoned. GRAFT is the final project, pruned to what
-  the findings rest on; it is not a record of everything attempted.
+- **No commit carries a false timestamp.** Nothing is backdated. Every commit is
+  dated when it was made.
+- **No commit claims an experiment finished before it did.** The dates of the
+  actual work are in §3 below, and the ones that matter are independently
+  checkable against the upstream issues and pull requests, which are public and
+  timestamped.
 
-## 2. Which finding was discovered by this tool
+## 2. What the tool found, and what it got wrong
 
 **Defects #1–#3 — discovered by GRAFT.** A mined DuckDB reproduction, templated,
 re-literalised with boundary values, executed against Turso, caught by the crash
-oracle. Seed 6948, first observed `2026-10-28T19:58:43Z`, eight seconds into the
-first campaign. The chain is replayable with `make reproduce`.
+oracle. First observed `2026-10-28T19:58:43Z`, eight seconds into the first
+campaign. `make reproduce` replays the whole chain, and
+[`../findings/README.md`](../findings/README.md) gives the seeds that regenerate
+each defect in a single case against a pre-fix build.
 
 **Defect #4 — the multi-byte fill.** Flagged by the campaign's generator arm,
 then analysed while we were writing the patch for #1–#3. It is reproducible
@@ -67,7 +68,7 @@ PR #11225.
 | 2026-10-28 17:09 UTC | DuckDB corpus mined: 600 candidates → 200 issues → 659 reproductions | `data/mined/duckdb/meta.json` |
 | 2026-10-28 19:58:35 UTC | first campaign starts against Turso `730017f96` | campaign log |
 | 2026-10-28 19:58:43 UTC | **defect #1 first observed** (8 s in) | the finding record |
-| 2026-11-01 | re-verified on a fresh build of `b588fbdc6`; duplicate search run | `findings/bug-01/README.md` |
+| 2026-11-01 | re-verified on a fresh build of `b588fbdc6`; duplicate search run | `findings/defect-01-lpad/README.md` |
 | 2026-11-01 11:44 UTC | issue #11219 filed | github.com |
 | 2026-11-01 16:54 UTC | pull request #11225 opened | github.com |
 | 2026-11-01 17:09:50 UTC | **Autofixer surfaces defect #4's input** on #11225 | github.com |
@@ -75,7 +76,8 @@ PR #11225.
 | 2026-11-02 08:27 UTC | issue #11260 filed | github.com |
 | 2026-11-02 08:42 UTC | **PR #11259 merged** as `121cd0a8c80b` | github.com |
 | 2026-11-03 | pre-fix binary built at `b588fbdc6`; before/after captured | `docs/evaluation.md` §2 |
-| 2026-11-03 | this repository organised and documented | this history |
+| 2026-11-03 | repository assembled and documented | this history |
+| 2026-11-10 | transfer-versus-generation ablation run; all four defects rediscovered from seeds | `experiments/ablation.json` |
 
 ## 4. The hypothesis came after the first finding
 
@@ -84,11 +86,11 @@ fuzzer cannot express these statements, with four verifiable limits — was
 established **after** defect #1 was discovered and filed, as an explanation of
 why a well-fuzzed engine still had the defect.
 
-It is reported throughout as a hypothesis that the evidence supports and that
-RQ3 would test, never as the design intent that produced the finding. The honest
-sequence was: the transfer mechanism produced a crash; we then asked why nobody
-else had found it; reading the incumbent fuzzer's source answered that; and the
-answer suggested the general method.
+It is reported throughout as a hypothesis the evidence supports, never as the
+design intent that produced the result. The honest sequence was: the transfer
+mechanism produced a crash; we then asked why nobody else had found it; reading
+the incumbent fuzzer's source answered that; and the answer suggested the
+general method.
 
 One detail a reviewer should have, because it bounds what the ablation in
 `experiments/` can claim: `lpad`, `rpad` and `repeat` were added to the
@@ -99,24 +101,20 @@ could; that is consistent with everything stated here, and it is why the
 experiment is reported as a comparison of the two sources today rather than as
 a reconstruction of what happened.
 
-## 5. What was pruned, and why it is not here
+## 5. What is not claimed here
 
-The predecessor repository contained substantial work that is absent from GRAFT
-because it did not contribute to either finding: a variant-mutation and
-cross-engine-translation stage; metamorphic oracles (ternary logic partitioning,
-non-optimising reference engine construction, an index-invariance oracle);
-persistence and crash-recovery probes; a deep data profile; and adapters for
-engines GRAFT does not test.
+**A third defect was filed during the investigation**, in Apache DataFusion:
+issue [#27001](https://github.com/apache/datafusion/issues/27001) with our pull
+request [#27002](https://github.com/apache/datafusion/pull/27002). It is
+**open and unreviewed**, it is not in Turso, and it is not claimed as a result
+of this project. It is mentioned so that a reader who finds it under the same
+GitHub account knows why it is absent from the four.
 
-Those were real experiments with real measurements, and most produced **nothing**
-— which is itself a result, reported in the predecessor's records rather than
-restated here. They are excluded from GRAFT under one rule: *nothing stays unless
-it contributes to discovering, explaining, reproducing, fixing or evaluating the
-two reported defects.*
-
-A third defect was also filed during the investigation, in Apache DataFusion
-(issue #27001, our PR #27002). It is **open, unreviewed**, was not found by the
-mechanism this project is about, and is not claimed as a result here.
+**Other approaches were tried during the investigation and are not in this
+repository** — among them metamorphic oracles and several probe harnesses.
+They produced no defect that was filed. They are not described further here
+because their code and measurements are not in this repository, and an
+unverifiable claim is worth less than no claim.
 
 ## 6. Tooling and assistance
 
@@ -136,13 +134,16 @@ In rough order of how much they constrain the claims:
 
 1. **The two merged pull requests.** `tursodatabase/turso#11225` and `#11259`,
    with merge commits `ec86571642a6` and `121cd0a8c80b`. Public.
-2. **The Autofixer comment on #11225**, dated `2026-11-01T17:09:50Z`, which
-   establishes §2's attribution for defect #4. Public.
+2. **The Autofixer comment on #11225**, dated `2026-11-01T17:09:50Z`, and our
+   reply at `18:09Z`, which together show that we had defect #4's direction
+   backwards and that a reviewer corrected it. Public, and §2 says the same.
 3. **`make reproduce`.** Deterministic; prints the source report, the template,
    the seeded fill, the 26.4% rate, the four limits, and the before/after
    behaviour on two builds.
 4. **The four blind-spot commands** in `docs/evaluation.md` §2, against a Turso
    checkout.
-5. **`make test`** — 514 tests.
-6. **`data/mined/duckdb/meta.json`**, which records the mining run's own
+5. **The seeds in [`../findings/README.md`](../findings/README.md)**, each of
+   which regenerates its defect in one case against a pre-fix build.
+6. **`make test`** — 514 tests.
+7. **`data/mined/duckdb/meta.json`**, which records the mining run's own
    counters rather than our description of them.

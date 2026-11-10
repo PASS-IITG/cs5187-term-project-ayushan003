@@ -1,3 +1,9 @@
+> **As submitted upstream.** This is the text of [tursodatabase/turso#11259](https://github.com/tursodatabase/turso/pull/11259), reproduced here
+> verbatim from the upstream record. **State: **merged** 2026-11-02 as `121cd0a8c80b`, +54/−5.**
+> Covers defect(s) #4 — see [`../README.md`](../README.md).
+
+---
+
 Fixes #11260.
 
 Follow-up to #11225, which flagged this case as not fixed by it and said a

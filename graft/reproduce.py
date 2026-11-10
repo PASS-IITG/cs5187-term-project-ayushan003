@@ -235,7 +235,7 @@ def step_6_upstream() -> None:
     print("  we were patching for defect #1, recorded it as harmless, and an")
     print("  automated reviewer on our own pull request corrected that judgement")
     print("  before we diagnosed and fixed it. See docs/provenance.md.")
-    print("\n  Full write-ups: findings/bug-01/README.md, findings/bug-02/README.md")
+    print("\n  Full write-ups: findings/README.md -- one page per defect")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

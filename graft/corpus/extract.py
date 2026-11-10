@@ -718,7 +718,7 @@ def extract_target(
 
 
 def main(targets: Iterable[str] = ("duckdb", "datafusion", "turso")) -> int:
-    """Entry point for ``python -m miner.extract``."""
+    """Entry point for ``python -m graft.corpus.extract``."""
     for target in targets:
         stats = extract_target(target)
         print(

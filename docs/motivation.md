@@ -67,6 +67,14 @@ This is the project's hypothesis, and the thing it is named for: **take the
 shape of a defect that is already known somewhere else, and graft it onto a new
 host.**
 
+It is not the only way to occupy a blind spot, and GRAFT does not treat it as
+such. A generator that is told, explicitly, to draw from the value domains an
+incumbent fuzzer excludes — `i64::MAX`, multi-byte characters, empty strings —
+aims at the same region by a different route. GRAFT carries both and the
+campaign can run either, which is what makes the comparison in
+`experiments/README.md` possible rather than hypothetical. The answer there is
+not the one the hypothesis predicts, and it is reported as measured.
+
 ## Why this is worth doing rather than obvious
 
 Two objections are worth stating, because the design has to answer them.
@@ -88,12 +96,19 @@ single statement must not terminate the process.
 
 ## What this project claims
 
-That the method found a real, previously unknown defect in a well-fuzzed engine,
-that the defect sits provably outside what that engine's own fuzzer can express,
-and that the fix was accepted upstream.
+That the tool found four real, previously unknown defects in a well-fuzzed
+engine; that all four sit provably outside what that engine's own fuzzer can
+express; that every one is rediscoverable from a recorded seed; and that all
+four were fixed upstream by our patches.
 
-It does not claim that the method is better than grammar-based generation in
-general, that two defects establish a rate, or that it would work as well on an
-engine without a rich upstream bug tracker to mine. `docs/evaluation.md` states
-the limits, and `docs/provenance.md` records exactly which of the two reported
-defects this tool found and which it did not.
+It does **not** claim that mining bug reports beats grammar-based generation.
+Measured at equal budget, on this target, it does not: the generator reaches
+three distinct defect signatures and the mined templates reach two, and the one
+they miss they cannot reach at any seed. `experiments/README.md` has the run and
+`docs/evaluation.md` §2 reports it under RQ3.
+
+Nor does it claim that four defects in one family of string functions, in one
+engine, establish a rate, or that the method would work as well against an
+engine without a rich upstream tracker to mine. `docs/evaluation.md` §6 lists
+the limitations and `docs/provenance.md` records what happened in what order,
+including what we got wrong.

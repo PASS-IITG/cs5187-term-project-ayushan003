@@ -1,3 +1,9 @@
+> **As submitted upstream.** This is the text of [tursodatabase/turso#11225](https://github.com/tursodatabase/turso/pull/11225), reproduced here
+> verbatim from the upstream record. **State: **merged** 2026-11-02 as `ec86571642a6`, +138/−41.**
+> Covers defect(s) #1, #2 and #3 — see [`../README.md`](../README.md).
+
+---
+
 Fixes #11219.
 
 `lpad`, `rpad` and `repeat` build their result from the length the caller asks
@@ -90,3 +96,4 @@ university software-engineering course; the crash oracle caught this one. The
 patch was written with AI assistance (Claude), which is also recorded as a
 `Co-Authored-By` trailer on the commit. I have read the change, I understand it,
 and I am happy to defend or revise it.
+

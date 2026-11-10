@@ -9,15 +9,15 @@ turso:
     date: 2026-10-28
     contains_our_fixes: false
     role: >
-      The revision the discovery campaign ran against. Finding 1 was first
+      The revision the discovery campaign ran against. Defect #1 was first
       observed here, 2026-10-28T19:58:43Z.
 
   - commit: b588fbdc6
     date: 2026-11-01
     contains_our_fixes: false
     role: >
-      The revision Finding 1 was re-verified on before the report was filed,
-      and the base of pull request #11225. Finding 2's cost was measured here
+      The revision defect #1 was re-verified on before the report was filed,
+      and the base of pull request #11225. Defect #4's cost was measured here
       (about 34 s and an 11.7 GB peak). This is the "before" binary: build it
       to reproduce either finding's original behaviour.
 

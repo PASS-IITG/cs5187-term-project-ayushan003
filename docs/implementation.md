@@ -50,6 +50,10 @@ export GRAFT_TURSO_PREFIX_BIN=~/targets/turso-prefix/target/release/tursodb
 `make reproduce` skips step 5 with these instructions when either binary is
 missing, rather than reporting a result it did not obtain.
 
+The data contracts these modules share — error classes, statuses, the finding
+record, the signature, the log format — are specified in
+[`spec.md`](spec.md).
+
 ## Module map
 
 | Path | Notes |
@@ -60,7 +64,7 @@ missing, rather than reporting a result it did not obtain.
 | `graft/engines/base.py` | the `Engine` interface, `Result`, `TestCase`. `run_case` replays the whole setup for each execution, so no state leaks between cases. |
 | `graft/engines/turso.py` | the CLI adapter. See `embedded_diagnostic` below. |
 | `graft/engines/errors.py` | maps engine output to an error class: `none`, `user_error`, `internal_error`, `panic`, `crash`, `timeout`. The oracle fires only on the last four. |
-| `graft/engines/sqlite.py` | stdlib `sqlite3`. **Test infrastructure only** — the backing store for the planted-bug engine. Not a reference oracle; neither finding used it. |
+| `graft/engines/sqlite.py` | stdlib `sqlite3`. **Test infrastructure only** — the backing store for the planted-bug engine. Not a reference oracle; no defect here was found with it. |
 | `graft/engines/fake.py` | `PlantedBugEngine`: an engine with deliberate defects, used to prove the oracle fires. |
 | `graft/corpus/github.py` | cached, rate-limit-aware, read-only GitHub client. |
 | `graft/corpus/fetch.py` | closed issues carrying the target repository's confirmed-bug label. |
@@ -68,7 +72,7 @@ missing, rather than reporting a result it did not obtain.
 | `graft/corpus/classify.py` | labels a subset by defect class and transferability. |
 | `graft/corpus/templates.py` | **the transfer mechanism.** `templatize` replaces literals with typed holes; `instantiate` fills them from boundary-weighted pools; `load_templates` reads the corpus and applies `configs/weights.yaml`. |
 | `graft/generate/capabilities.py` | probes the real binary; writes `configs/capabilities.yaml`. |
-| `graft/generate/{schema,data,expr,query}.py` | the typed generator: schema, rows, expressions, queries. The comparison arm. |
+| `graft/generate/{schema,data,expr,query}.py` | the typed generator: schema, rows, expressions, queries. One of the two case sources, and the one that reaches defect #4. |
 | `graft/oracle/crash.py` | the only oracle. ~145 lines. |
 | `graft/triage/reduce.py` | shrink while preserving the violation; `sqlglot` where it parses, text where it does not. |
 | `graft/triage/verify.py` | re-run on a fresh process, then on current `main`. |
@@ -78,6 +82,10 @@ missing, rather than reporting a result it did not obtain.
 | `graft/triage/finding.py` | builds the finding record. |
 | `graft/campaign.py` | the seeded, resumable loop; `--mode {variants,fuzzer,both}`. |
 | `graft/reproduce.py` | the five-step replay. |
+| `graft/triage/run.py` | drives the triage pipeline over a findings directory. |
+| `graft/triage/features.py` | derives feature tags from SQL text; see `docs/spec.md` §5. |
+| `graft/triage/signature.py` | the coarse signature that groups findings; see `docs/spec.md` §4. |
+| `graft/engines/smoke.py` | `make smoke`: a few statements against each adapter, as a liveness check. |
 
 ## Three implementation details worth knowing
 

@@ -1,3 +1,12 @@
+> **Contemporaneous note, preserved as written.** This was our working analysis
+> on 2026-11-01, before the issue was filed. It is kept unedited, including its
+> future tense — the pull request it anticipates is
+> [#11259](https://github.com/tursodatabase/turso/pull/11259), which was merged
+> the next day. Current state is in
+> [`README.md`](README.md).
+
+---
+
 # Follow-up (NOT in PR 11225): lpad/rpad with a multi-byte fill
 
 Deliberately left out of PR 11225 to keep that PR to the reported bug. Open this

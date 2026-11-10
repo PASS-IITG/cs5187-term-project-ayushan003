@@ -383,7 +383,7 @@ class Campaign:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Command line entry point for ``python -m runner.fuzz``."""
+    """Command line entry point for ``python -m graft.campaign``."""
     parser = argparse.ArgumentParser(description="unattended fuzz campaign")
     parser.add_argument("--target", default="turso")
     parser.add_argument(

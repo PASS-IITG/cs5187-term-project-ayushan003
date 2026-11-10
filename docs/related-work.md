@@ -229,3 +229,12 @@ recurring-defect literature and the *instrument* from the grammar-fuzzing
 literature. The practical consequence is the one that mattered here — because it
 needs no reference implementation, it can test a function that the reference
 engine does not have.
+
+One caveat belongs in this table rather than after it. GRAFT carries a typed
+generator alongside the transfer path, and measured at equal budget on this
+target the generator reaches *more* defect signatures than the transfer path
+does (`experiments/README.md`). So the empty cell is where GRAFT's **novelty**
+sits, not where all of its results came from. Occupying it is what let the
+project test `lpad` at all — no differential oracle can, because SQLite has no
+`lpad` to compare against — but the comparison between the two sources is
+reported as it came out, not as the positioning would prefer.

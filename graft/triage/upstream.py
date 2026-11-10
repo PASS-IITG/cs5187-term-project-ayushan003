@@ -1,12 +1,12 @@
 """Track what a human filed upstream. This module never files anything.
 
-``python -m triage.upstream add ID URL STATE`` is run BY A HUMAN after they have
+``python -m graft.triage.upstream add ID URL STATE`` is run BY A HUMAN after they have
 filed an issue themselves. It records the URL and state and moves the draft from
 ``reports/draft/`` to ``reports/filed/``. ``refresh`` re-reads the recorded
 issues with read-only GETs and updates their states.
 
 The states here are exactly the human-only half of the status vocabulary in
-docs/SPEC.md. The tool refuses to set them any other way, which is why this is a
+docs/spec.md. The tool refuses to set them any other way, which is why this is a
 separate command a person runs on purpose.
 """
 
@@ -100,8 +100,8 @@ def write_entries(entries: Sequence[Entry], path: Path | None = None) -> Path:
         "# Upstream issues",
         "",
         "Issues a HUMAN filed from the drafts in `reports/`. This file is written by",
-        "`python -m triage.upstream`, which never files anything itself: the states",
-        "below are the human-only half of the status vocabulary in docs/SPEC.md, and",
+        "`python -m graft.triage.upstream`, which never files anything itself: the states",
+        "below are the human-only half of the status vocabulary in docs/spec.md, and",
         "the tool has no way to set them except through a person running `add`.",
         "",
         "| id | target | issue | state | updated |",

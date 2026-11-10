@@ -5,10 +5,11 @@ PY ?= python3
 
 help:
 	@echo "GRAFT targets:"
-	@echo "  make reproduce   replay the chain that produced Finding 1, end to end"
+	@echo "  make reproduce   replay the chain that produced defect #1, end to end"
 	@echo "  make test        run the test suite"
 	@echo "  make campaign    run a bounded campaign against Turso"
 	@echo "  make probe       re-probe Turso's capabilities into configs/"
+	@echo "  make smoke       run a few statements against each engine adapter"
 	@echo "  make corpus      re-mine the DuckDB corpus (needs GITHUB_TOKEN)"
 	@echo ""
 	@echo "Engine binaries come from configs/targets.yaml; override with"
@@ -38,3 +39,6 @@ corpus:
 
 clean:
 	rm -rf .pytest_cache **/__pycache__ workdir/*.seed
+
+smoke:
+	$(PY) -m graft.engines.smoke

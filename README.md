@@ -11,7 +11,7 @@ with boundary values, and a typed generator of its own. It found four
 previously-unknown defects in [Turso](https://github.com/tursodatabase/turso),
 all fixed upstream by our patches.
 
-> **Status, stated precisely.** **Four defect instances** found and corrected
+> **Status, stated precisely.** **Four defects** found and fixed
 > across four function/argument paths in Turso's string functions — `lpad`,
 > `rpad`, `repeat` and the multi-byte fill case. Upstream consolidated them into
 > **two issues and two pull requests, both merged**, because the first three
@@ -60,25 +60,30 @@ Four sub-questions, answered in [`docs/evaluation.md`](docs/evaluation.md) and
 ## Objectives
 
 1. Measure what the target engine's own fuzzer cannot express, before testing.
-2. Build a corpus of reproductions from a *different* engine's closed defects.
-3. Transfer their structure, not their values, to the engine under test.
+2. Build a corpus of reproductions from a *different* engine's closed defects,
+   and transfer their structure — not their values — to the engine under test.
+3. Generate typed SQL aimed at the same region, as a second source and as the
+   arm to compare transfer against.
 4. Detect with an oracle that needs no reference implementation.
 5. Reduce, re-verify and report anything found, and get the fix accepted.
 
 ## How it works
 
 ```
-duckdb/duckdb closed issues  ──mine──▶  659 reproductions
+ duckdb/duckdb closed issues ──mine──▶ 659 reproductions
                                             │
-                        literals ──▶ typed holes   (keep the maintainer's shape)
+                    literals ──▶ typed holes  (keep the maintainer's shape)
                                             │
-                        boundary values ──▶ filled statements
-                                            │
-                                      run on tursodb
+                    boundary values ──▶ filled statements ─┐
+                                                           │
+ capability probe ──▶ typed generator ──▶ schema, data, ───┤  --mode picks
+                      queries, boundary literals           │  either or both
+                                                           │
+                                      run on tursodb ◀─────┘
                                             │
                         crash oracle: did one statement kill the process?
                                             │
-                        reduce ─▶ re-verify on current main ─▶ duplicate search ─▶ report
+            reduce ─▶ re-verify on current main ─▶ duplicate search ─▶ report
 ```
 
 The source report, `duckdb/duckdb#27846`, is about pad functions mishandling
@@ -97,11 +102,11 @@ Full design in [`docs/design.md`](docs/design.md); the reasoning in order in
 
 ## The findings
 
-Four defect instances, two upstream patches. The mapping — which SQL path,
-which code path, which seed, which issue — is in
-[`findings/README.md`](findings/README.md). The two patches:
+Four defects, two upstream patches. Each has its own page with the root cause,
+the measured before-and-after and the seed that rediscovers it:
+[`findings/README.md`](findings/README.md). Grouped by patch:
 
-### [Defects #1–#3](findings/bug-01/README.md) — allocation before the length check
+### Defects [#1](findings/defect-01-lpad/README.md), [#2](findings/defect-02-rpad/README.md), [#3](findings/defect-03-repeat/README.md) — allocation before the length check
 
 ```sql
 select LPAD('a', 9223372036854775807, 'b');
@@ -113,22 +118,22 @@ caller's argument before comparing anything against `Value::MAX_BLOB_LENGTH`,
 so a length near `i64::MAX` reached the allocator and aborted the process.
 `repeat` additionally multiplies, so it needed `checked_mul`.
 
-The fuzzer flagged both code paths from independent cases: seed 6948 for
-`lpad`/`rpad`, seed 261377 for `repeat`
-(`SELECT repeat('a''b', 9223372036854775807) LIKE repeat('_', 1)`).
+Each aborts on its own, from its own single statement, in its own process:
 
 | | exit | time | output |
 |---|---|---|---|
-| before `b588fbdc6` | **134** (SIGABRT) | 1.11 s | `memory allocation of 9223372036854775806 bytes failed` |
-| after `7f0a9e6f4` | 1 | 0.01 s | `Runtime error: string or blob too big (18)` |
+| `lpad`, before `b588fbdc6` | **134** (SIGABRT) | 2.28 s | `memory allocation of 9223372036854775806 bytes failed` |
+| `rpad`, before | **134** | 2.24 s | `memory allocation of 9223372036854775806 bytes failed` |
+| `repeat`, before | **134** | 2.27 s | `memory allocation of 9223372036854775807 bytes failed` |
+| all three, after `7f0a9e6f4` | 1 | 0.02 s | `Runtime error: string or blob too big (18)` |
 
-**Found by GRAFT**, 8 s into the first campaign; `repeat` independently
-confirmed at seed 261377. Covers defects #1–#3 of four. Issue
+**Found by GRAFT**, 8 s into the first campaign, and rediscoverable from seeds
+101 and 5080. Issue
 [#11219](https://github.com/tursodatabase/turso/issues/11219) · our PR
 [#11225](https://github.com/tursodatabase/turso/pull/11225) **merged**
 `ec86571642a6` (+138 / −41).
 
-### [Defect #4](findings/bug-02/README.md) — a character count against a byte limit
+### [Defect #4](findings/defect-04-multibyte-fill/README.md) — a character count against a byte limit
 
 ```sql
 SELECT length(LPAD('a', 1000000000, '😀'));
@@ -140,8 +145,8 @@ fill passes a billion-character check and builds about 4 GB.
 
 | | exit | time | output |
 |---|---|---|---|
-| before, `ulimit -v 6000000` | **134** (SIGABRT) | 2.86 s | `memory allocation of 3999999996 bytes failed` |
-| after | 1 | 0.01 s | `Runtime error: string or blob too big (18)` |
+| before, `ulimit -v 6000000` | **134** (SIGABRT) | 3.96 s | `memory allocation of 3999999996 bytes failed` |
+| after | 1 | 0.02 s | `Runtime error: string or blob too big (18)` |
 
 `3999999996` is 10⁹ characters × 4 bytes: the root cause is visible in the
 failure message. **Reached by the generator arm at seed 6376**
@@ -227,9 +232,14 @@ graft/
 │   └── reproduce.py                 the five-step replay
 ├── configs/                         targets, engine revisions, probed capabilities, weights
 ├── data/                            the mined corpus, committed
-├── findings/bug-01/ bug-02/         reproduction, patch, pull request, upstream state
+├── findings/                        one directory per defect, plus patches/
+│   ├── defect-01-lpad/  defect-02-rpad/
+│   ├── defect-03-repeat/  defect-04-multibyte-fill/
+│   └── patches/                     the two patches, PR bodies and issue texts
 ├── docs/                            motivation, related work, methodology, design,
-│                                    implementation, evaluation, provenance, references
+│                                    implementation, evaluation, spec, provenance,
+│                                    references
+├── experiments/                     the transfer-vs-generation ablation and its data
 └── tests/                           514 tests
 ```
 

@@ -334,10 +334,10 @@ def write_index(
     lines = [
         "# Report drafts",
         "",
-        "Written by `python -m triage.report`. Nothing here has been filed; this",
-        "tool never files anything. `status` uses the vocabulary in docs/SPEC.md,",
+        "Written by `python -m graft.triage.report`. Nothing here has been filed; this",
+        "tool never files anything. `status` uses the vocabulary in docs/spec.md,",
         "and only a human sets `filed` or anything after it, through",
-        "`python -m triage.upstream add`.",
+        "`python -m graft.triage.upstream add`.",
         "",
         "| id | target | oracle | status | draft |",
         "| --- | --- | --- | --- | --- |",

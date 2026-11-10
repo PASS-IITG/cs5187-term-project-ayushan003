@@ -665,7 +665,7 @@ def run(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Command line entry point for ``python -m miner.fetch``."""
+    """Command line entry point for ``python -m graft.corpus.fetch``."""
     parser = argparse.ArgumentParser(description=__doc__ and __doc__.splitlines()[0])
     parser.add_argument("--target", action="append", dest="targets")
     parser.add_argument("--max-issues", type=int, default=DEFAULT_MAX_ISSUES)

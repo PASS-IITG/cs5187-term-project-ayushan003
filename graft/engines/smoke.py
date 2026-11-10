@@ -1,4 +1,4 @@
-"""``make smoke``: run a fixed set of statements against every adapter.
+"""``make smoke``: run a fixed set of statements against each engine adapter.
 
 Prints two tables: what each engine says it is, and what each engine does with
 four statements - one valid, one that divides by zero, one that reads a table
@@ -104,7 +104,7 @@ def run(engines: Sequence[tuple[str, str]] = ENGINES) -> int:
 
 
 def main() -> int:
-    """Entry point for ``python -m adapters.smoke``."""
+    """Entry point for ``python -m graft.engines.smoke``."""
     return run()
 
 

@@ -44,17 +44,17 @@
 
 | Module | Lines | Responsibility |
 |---|---|---|
-| `graft/` (config, log, proc) | 1,216 | target resolution, JSONL logging, subprocess control with timeouts |
+| `graft/` (config, log, proc) | 497 | target resolution, JSONL logging, subprocess control with timeouts |
 | `graft/engines/` | 1,619 | one interface over `tursodb`; error classification; a planted-bug engine for tests |
 | `graft/corpus/` | 2,399 | mining, extraction, classification, templating — **the transfer mechanism** |
 | `graft/generate/` | 2,529 | capability probing and the typed SQL generator — the comparison arm |
 | `graft/oracle/` | 230 | the crash oracle and the violation type |
 | `graft/triage/` | 2,044 | reduction, re-verification, duplicate search, report drafting, upstream ledger |
-| `graft/campaign.py` | — | the seeded campaign loop |
-| `graft/reproduce.py` | — | the one-command replay of the headline result |
+| `graft/campaign.py` | 453 | the seeded campaign loop, over either case source |
+| `graft/reproduce.py` | 267 | the one-command replay of the headline result |
 | `tests/` | 5,041 | 514 tests |
 
-Total: **10,037 lines** of implementation, 5,041 of tests.
+Total: **10,038 lines** of implementation, 5,041 of tests, 514 tests.
 
 ## Design decisions, and what each one costs
 
@@ -129,8 +129,8 @@ did not obtain.
 
 | Not here | Why |
 |---|---|
-| Differential or metamorphic oracles | Neither finding needed one, and SQLite — the only sane reference for a SQLite-compatible engine — has no `lpad`, so a differential oracle is blind to both defects by construction. |
+| Differential or metamorphic oracles | No defect here needed one, and SQLite — the only sane reference for a SQLite-compatible engine — has no `lpad`, so a differential oracle is blind to all four by construction. |
 | Any engine but Turso at run time | GRAFT tests one engine. DuckDB is a corpus source and is never executed. |
-| Coverage-guided feedback | Not implemented. `configs/weights.yaml` is a static, hand-set bias, not a feedback loop. Stated as a limitation in `docs/evaluation.md`. |
+| Coverage-guided feedback | Not implemented. `configs/weights.yaml` is a static, hand-set bias, not a feedback loop. Limitation 8 in `docs/evaluation.md` §6. |
 | Grammar learning | Not implemented. See the FDLoop entry in `docs/related-work.md` for what the principled version would be. |
 | Any language-model call | Nothing in the pipeline calls one. |
