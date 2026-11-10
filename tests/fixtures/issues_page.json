@@ -1,0 +1,77 @@
+[
+ {
+  "number": 26656,
+  "html_url": "https://github.com/apache/datafusion/issues/26656",
+  "title": "Incorrect ORDER BY results after sort pushdown through custom execution plans",
+  "body": "### Describe the bug\n\nSort pushdown through a custom execution plan can remove a necessary sort, producing incorrectly ordered results or a plan rejected by [`SanityCheckPlan`](https://github.com/apache/datafusion/blob/2717e25625ff0c51c1805f8df52d317979db74ec/datafusion/physical-optimizer/src/sanity_checker.rs#L43-L51).\n\nThe generic [`handle_custom_pushdown`](https://github.com/apache/datafusion/blob/2717e25625ff0c51c1805f8df52d317979db74ec/datafusion/physical-optimizer/src/ensure_requirements/enforce_sorting/sort_pushdown.rs#L996-L1092) fallback maps output sort keys to child columns by posit",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "created_at": "2026-10-23T12:10:01Z",
+  "closed_at": "2026-10-28T15:25:39Z",
+  "state": "closed",
+  "state_reason": "completed"
+ },
+ {
+  "number": 26619,
+  "html_url": "https://github.com/apache/datafusion/issues/26619",
+  "title": "`push_down_filter` substitutes the wrong expression when `col` and `CAST(col AS ...)` share a schema name (HAVING and correlated IN give type errors)",
+  "body": "### Describe the bug\n\n`CAST(t.a AS ...)` has the same schema name as `t.a` (see #26221). `push_down_filter` rewrites a predicate it moves below a node by looking up the node's outputs by name, in a `HashMap`. When the node has both `t.a` and `CAST(t.a AS ...)`, one entry overwrites the other, and the pushed predicate refers to the wrong one. The result is an execution-time type error for a valid query. Both branches of the rule are affected:\n\n- `Aggregate`: `GROUP BY a, CAST(a AS VARCHAR) HAVING a > (subquery)` pushes `CAST(t.a AS Utf8View) > (subquery)` below the aggregate.\n- `Projection` (`r",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "created_at": "2026-10-23T00:30:56Z",
+  "closed_at": "2026-10-28T06:33:10Z",
+  "state": "closed",
+  "state_reason": "completed"
+ },
+ {
+  "number": 26003,
+  "html_url": "https://github.com/apache/datafusion/issues/26003",
+  "title": "Sort-merge semi/anti/mark joins fail on timezone-aware timestamp, Dictionary, Decimal256 and Time keys: \"Unsupported data type in sort merge join comparator\"",
+  "body": "### Describe the bug\n\nSort-merge semi / anti / mark joins (`EXISTS`, `IN`, `NOT EXISTS`, ...) fail on several common join key types once a key group reaches the end of an input batch:\n\n```\nThis feature is not implemented: Unsupported data type in sort merge join comparator: Timestamp(\u00b5s, \"UTC\")\n```\n\nAffected key types include timezone-aware timestamps (`Timestamp(_, Some(tz))`, e.g. Parquet timestamps with `isAdjustedToUTC=true`), `Dictionary` (e.g. Hive partition columns), `Decimal256`, and `Time32` / `Time64`. An inner sort-merge join on the same keys works, and so does hash join. With the d",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "created_at": "2026-10-03T14:54:02Z",
+  "closed_at": "2026-10-28T04:45:42Z",
+  "state": "closed",
+  "state_reason": "completed"
+ },
+ {
+  "number": 25829,
+  "html_url": "https://github.com/apache/datafusion/issues/25829",
+  "title": "DataFrame::fill_null and fill_nan fail on column names with uppercase letters or dots",
+  "body": "### Describe the bug\n\n`DataFrame::fill_null` and `DataFrame::fill_nan` fail with a schema error on any DataFrame that has a column whose name is not a plain lowercase identifier, such as `Name` or `a.b`. This happens even when that column is not in the `columns` list being filled.\n\n`fill_columns` rebuilds every column in the projection with `col(field.name())`. `col` parses its argument as a SQL identifier, so `Name` is normalized to `name`, and `a.b` becomes column `b` qualified by table `a`. Neither resolves against the schema.\n\nhttps://github.com/apache/datafusion/blob/main/datafusion/core/",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "created_at": "2026-09-28T13:36:49Z",
+  "closed_at": "2026-10-27T20:47:41Z",
+  "state": "closed",
+  "state_reason": "completed"
+ },
+ {
+  "number": 25623,
+  "html_url": "https://github.com/apache/datafusion/issues/25623",
+  "title": "Estimate equality to a scalar subquery without a blanket 20% fallback",
+  "body": "## Describe the bug\n\nReplacing a month-key literal with an equivalent scalar subquery changes the\nfilter estimate from 31 to 14,610 rows. Both return the same 29 rows.\n\n## To Reproduce\n\nFrom the repository root, with\n[PR #25570](https://github.com/apache/datafusion/pull/25570) applied:\n\n```sh\ncargo build --profile ci --locked -p datafusion-benchmarks --bin dfbench\nrepro_dir=$(mktemp -d)\nmkdir -p \"$repro_dir/data\"\ncurl --fail --location \\\n  https://raw.githubusercontent.com/apache/datafusion-benchmarks/32f67477f692453616d2fa98a05a37c5eb4cae49/tpcds/data/sf1/date_dim.parquet \\\n  -o \"$repro_dir/d",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "created_at": "2026-09-22T15:07:11Z",
+  "closed_at": "2026-10-27T19:37:24Z",
+  "state": "closed",
+  "state_reason": "completed"
+ }
+]

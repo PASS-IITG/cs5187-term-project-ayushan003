@@ -1,0 +1,29 @@
+# a sqllogictest sample covering the directives the extractor must handle
+statement ok
+CREATE TABLE t0(c0 INTEGER, c1 VARCHAR);
+
+statement ok
+INSERT INTO t0 VALUES (1, 'a'), (NULL, 'b');
+
+query IT
+SELECT c0, c1 FROM t0 ORDER BY c1;
+----
+1	a
+NULL	b
+
+# an expected-error statement is not usable setup
+statement error
+SELECT * FROM does_not_exist;
+
+onlyif duckdb
+query I
+SELECT count(*) FROM t0 WHERE c0 IS NULL;
+----
+1
+
+require tpch
+
+query I
+SELECT 1 + 1;
+----
+2

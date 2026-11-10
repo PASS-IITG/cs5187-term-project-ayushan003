@@ -1,0 +1,21 @@
+{
+ "sha": "5436945192f6ef653f038cdda6535dad01159698",
+ "files": [
+  {
+   "filename": "datafusion/physical-optimizer/src/ensure_requirements/enforce_sorting/sort_pushdown.rs",
+   "patch": "@@ -49,7 +49,10 @@ use datafusion_physical_plan::repartition::RepartitionExec;\n use datafusion_physical_plan::sorts::sort::SortExec;\n use datafusion_physical_plan::sorts::sort_preserving_merge::SortPreservingMergeExec;\n use datafusion_physical_plan::tree_node::PlanContext;\n-use datafusion_physical_plan::{ExecutionPlan, ExecutionPlanProperties};\n+use datafusion_physical_plan::{\n+    ChildrenPropertiesMode, ExecutionPlan, ExecutionPlanProperties,\n+    ReplaceChildrenOptions,\n+};\n \n /// \"Data class\" used by sort pushdown (now driven from `EnsureRequirements`)\n /// to push down [`SortExec`] in the plan. In some cases the total\n@@ -1007,6 +1010,7 @@ fn handle_custom_pushdown(\n \n     // Collect all unique column indices used in the parent-required sorting\n     // expression:\n+    let output_requ"
+  },
+  {
+   "filename": "datafusion/sqllogictest/src/test_context.rs",
+   "patch": "@@ -73,6 +73,7 @@ use log::info;\n use sqlparser::ast;\n use tempfile::TempDir;\n \n+mod custom_sort_pushdown;\n mod range_partitioning;\n \n /// Context for running tests\n@@ -182,6 +183,11 @@ impl TestContext {\n \n         let file_name = relative_path.file_name().unwrap().to_str().unwrap();\n         match file_name {\n+            \"sort_pushdown.slt\" => {\n+                custom_sort_pushdown::register_custom_sort_pushdown(\n+                    test_ctx.session_ctx(),\n+                );\n+            }\n             \"parquet_missing_bounds.slt\" => {\n                 register_parquet_missing_bounds(&mut test_ctx).await;\n             }"
+  },
+  {
+   "filename": "datafusion/sqllogictest/src/test_context/custom_sort_pushdown.rs",
+   "patch": "@@ -0,0 +1,167 @@\n+// Licensed to the Apache Software Foundation (ASF) under one\n+// or more contributor license agreements.  See the NOTICE file\n+// distributed with this work for additional information\n+// regarding copyright ownership.  The ASF licenses this file\n+// to you under the Apache License, Version 2.0 (the\n+// \"License\"); you may not use this file except in compliance\n+// with the License.  You may obtain a copy of the License at\n+//\n+//   http://www.apache.org/licenses/LICENSE-2.0\n+//\n+// Unless required by applicable law or agreed to in writing,\n+// software distributed under the License is distributed on an\n+// \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n+// KIND, either express or implied.  See the License for the\n+// specific language governing permissions and "
+  },
+  {
+   "filename": "datafusion/sqllogictest/test_files/sort_pushdown.slt",
+   "patch": "@@ -15,6 +15,72 @@\n # specific language governing permissions and limitations\n # under the License.\n \n+# custom_projection evaluates its SQL expression strings through a custom\n+# execution plan that preserves row order. Its input has two partitions:\n+# [(a=2, b=10), (a=1, b=30)] and [(a=3, b=20)].\n+statement ok\n+SET datafusion.execution.target_partitions = 2;\n+\n+# Renaming allows the sort to move below the custom operator.\n+query II\n+SELECT * FROM custom_projection('a AS first', 'b AS second') ORDER BY first, second;\n+----\n+1 30\n+2 10\n+3 20\n+\n+# Renaming is transparent: keep the sort below the custom operator.\n+statement ok\n+SET datafusion.explain.physical_plan_only = true;\n+\n+query TT\n+EXPLAIN SELECT * FROM custom_projection('a AS first', 'b AS second') ORDER BY first, second;\n+----\n+phy"
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+  "target": "duckdb",
+  "issues": 200,
+  "candidates": 1064,
+  "kept": 659,
+  "issues_with_repro": 126,
+  "from_issue_body": 133,
+  "from_fix_test": 526,
+  "drops": {
+    "extension": 4,
+    "external_file": 21,
+    "network": 5,
+    "no_sql_found": 39,
+    "setup_too_long": 13,
+    "test_template": 202,
+    "truncated_sql": 1,
+    "unknown_table": 159
+  }
+}
