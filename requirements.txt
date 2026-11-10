@@ -1,0 +1,18 @@
+# GRAFT dependencies. Pinned to the versions the recorded results were produced
+# with (see docs/evaluation.md for the full environment).
+#
+# Direct:
+PyYAML==6.0.3          # configs/*.yaml
+requests==2.34.2       # corpus mining from the GitHub API (not needed to reproduce)
+sqlglot==30.27.0       # AST-aware statement reduction, with a text fallback
+pytest==9.2.0          # test suite
+
+# Transitive, pinned for reproducibility:
+certifi==2026.10.23
+charset-normalizer==3.5.2
+idna==3.20
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+Pygments==2.21.0
+urllib3==2.8.0
