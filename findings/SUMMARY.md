@@ -24,8 +24,7 @@ argument and allocated before that length was checked against the engine's
 allocator, which cannot fail gracefully at that size, and the process terminated
 with SIGABRT instead of returning a SQL error. The existing limit check was
 never reached, so `SELECT LPAD('a', 9223372036854775807, 'b')` killed the
-session outright while `SELECT LPAD('a', 4294967296, 'b')` returned the correct
-error.
+session outright.
 
 - **Fix:** Moved the length comparison against `Value::MAX_BLOB_LENGTH` in front
   of the allocation, so an oversized request returns `LimboError::TooBig`

@@ -175,7 +175,8 @@ submission checks. Every number in it is traced to a file in
 ## Reproducing
 
 ```bash
-git clone <this repository> && cd graft
+git clone https://github.com/PASS-IITG/cs5187-term-project-ayushan003
+cd cs5187-term-project-ayushan003
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 

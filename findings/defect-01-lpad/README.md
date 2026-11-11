@@ -41,11 +41,15 @@ reported as `LimboError::TooBig` — "string or blob too big", SQLite code 18.
 
 `pad()` sized its output buffer from the `n` argument and allocated it before
 comparing anything against `Value::MAX_BLOB_LENGTH`. The limit check therefore
-ran only on a result that already existed, which is why the defect has a window
-rather than applying to every oversized call:
+ran only on a result that already existed, so whether an oversized call returns
+the error depends on whether the machine can build the result first:
 
-- `lpad('a', 4294967296, 'b')` — the ~4 GB allocation fails *gracefully*, the
-  check is reached, and the correct error is returned.
+- `lpad('a', 4294967296, 'b')` — issue #11219 records that this returned the
+  correct error on the machine it was first run on: the ~4 GB result was built
+  and the check rejected it. On our reference laptop, under a 12 GB
+  address-space cap, it built the first 4.3 GB and then aborted on a second,
+  8.6 GB allocation (`memory allocation of 8589934590 bytes failed`). Below the
+  extreme, the outcome depends on available memory, not on the check.
 - `lpad('a', 9223372036854775807, 'b')` — the allocator is asked for ~9.2 × 10¹⁸
   bytes, cannot fail gracefully, and aborts.
 

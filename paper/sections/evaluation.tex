@@ -97,9 +97,8 @@ Table~\ref{tab:defects} lists the defects. Defects 1 to 3 share a cause:
 \sql{lpad}, \sql{rpad} and \sql{repeat} sized their result from the caller's
 argument and allocated it before comparing it with
 \texttt{Value::MAX\_BLOB\_LENGTH}. At a length near \imax the allocation fails and
-Rust aborts the process. At 4{,}294{,}967{,}296 the allocation fails gracefully,
-the check is reached, and the correct error comes back; this is why the defect
-survives tests with merely large values. \sql{lpad} and \sql{rpad} share one
+Rust aborts the process before the check, which ran only on the finished
+result, is reached. \sql{lpad} and \sql{rpad} share one
 function body, \texttt{pad()}, so defects 1 and 2 have one root cause. We count
 them separately because each aborts the engine on its own, and a user who calls
 only \sql{rpad} is exposed. \sql{repeat} is a separate function that also
