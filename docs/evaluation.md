@@ -65,8 +65,8 @@ claim the project rests on, and `make reproduce` prints it as step 4.
 | Rediscoverable from a recorded seed | yes, all four, one case each |
 
 The transfer mechanism accounts for three of them. Its source was
-`duckdb/duckdb#27846` — closed, labelled `reproduced`, and about pad functions
-mishandling multi-byte fills:
+`duckdb/duckdb#27846` — closed, labelled `reproduced`, a performance regression
+in `lpad` and `rpad` whose fix added this regression test:
 
 ```
 mined:     select LPAD('x', 10, '0'), LPAD('x', 4, '😀'),

@@ -96,8 +96,8 @@ def step_1_source() -> dict:
     print(f"  Extracted from: {record.get('source')}  (the fix's own test)")
     print("\n  Its query:\n")
     print(f"    {record['query']}")
-    print("\n  A DuckDB maintainer wrote this to reproduce a real DuckDB defect:")
-    print("  pad functions mishandling multi-byte fill characters. Nothing about")
+    print("\n  The report is a performance regression in lpad/rpad. Its fix added")
+    print("  this query as a regression test, with multi-byte fills. Nothing about")
     print("  it mentions Turso.")
     return record
 

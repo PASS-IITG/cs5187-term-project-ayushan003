@@ -173,8 +173,9 @@ of which were applied to defect #1:
 
 1. **Reduce** (`reduce.py`). Shrink the statement while preserving the same
    violation, AST-aware through `sqlglot` where it parses and textual where it
-   does not. Defect #1 went from a four-call generated query to a single
-   statement, ratio 0.939, in five executions.
+   does not. The case for defect #3 went to a single statement in five
+   executions. Defect #1 was reduced by hand, from a four-call query to one
+   statement, before the reducer existed in its current form.
 2. **Re-verify** (`verify.py`). Replay on a *freshly started* engine process to
    exclude accumulated state, and then on a build of current upstream `main` to
    exclude "already fixed". Defect #1 was re-confirmed on `b588fbdc6`, built

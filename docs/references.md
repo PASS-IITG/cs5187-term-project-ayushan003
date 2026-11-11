@@ -18,7 +18,7 @@ decision named. The rest are positioning.
 
 2. **Liang, Y., Liu, P.** Efficiently Detecting DBMS Bugs through Bottom-up
    Syntax-based SQL Generation. *NDSS 2026*.
-   DOI [10.14722/ndss.2026.24198](https://doi.org/10.14722/ndss.2026.24198).
+   DOI [10.14722/ndss.2026.240198](https://doi.org/10.14722/ndss.2026.240198).
    **[full text]** — the closest prior work; see `docs/related-work.md` §1.
 
 3. **Kirschner, L., Soremekun, E.** Directed Grammar-Based Test Generation.

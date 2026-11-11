@@ -1,16 +1,45 @@
 \section*{Data Availability}
 \label{sec:data}
-%% Most SE venues require this (ISEC: "Artifact Availability"; FSE/ICSE:
-%% "Data Availability", after the Conclusion). While anonymous: export
-%% WITHOUT git history, scrub absolute paths (/Users/<name>/...) from JSON
-%% and logs, use an anonymous mirror (anonymous.4open.science).
-The replication package is available at \todo{anonymous URL}. It contains
-\todo{source of \tool with tests, subject list with exact commits, scripts,
-raw data, container definition}.
+The replication package is public~\cite{graftrepo}. It contains the source of
+\tool with its 514 tests; the mined DuckDB corpus with the mining run's own
+counters; one page per defect with its reproduction, measured before-and-after,
+root cause and regenerating seed; both patches with the issue and pull-request
+text as submitted; the raw results behind Table~\ref{tab:ablation}; and the exact
+Turso commits used. The command \texttt{make reproduce} replays the chain in
+Figure~\ref{fig:motivating} and, when both Turso builds are present, runs every
+defect before and after the patches.
 
 \section*{Use of Generative AI}
-%% ACM/IEEE authorship policies require disclosure. Confirm every word.
-\todo{Confirm and finalise.} A generative AI assistant (\todo{name, version})
-was used to \todo{what}. The authors checked every statement, every citation
-and every number. All numbers reported here were produced by running the
-tool and scripts.
+A generative AI assistant, Claude by Anthropic, was used during this project for
+help with writing and reviewing code, analysing results, and drafting the
+upstream issue reports, the documentation and this paper. Its use is disclosed in
+the body of both issues filed with the Turso maintainers. The authors checked
+every statement, every citation and every number. Every citation was verified
+against its DOI record, and all numbers reported here were produced by running
+the tool and the commands given in the replication package.
+
+\section*{Contribution Statement}
+This project was carried out by Ayush Singh Chauhan (240101117) and Mehul Raj
+(240101125) in shared working sessions. Both members took part in the design, the
+implementation, the campaigns, the triage of every candidate and the preparation
+of both patches, and both can explain every part of the work. Both upstream pull
+requests were submitted from one member's account. Each area below was led by the
+named member, who drove its design and wrote its first version, and was reviewed
+and extended by the other.
+
+\paragraph{Ayush Singh Chauhan.} The corpus pipeline and the templating step
+(Section~\ref{sec:step-mine}); the engine adapter and its error classification
+(Section~\ref{sec:impl}); the campaign driver; and the upstream submissions.
+
+\paragraph{Mehul Raj.} Capability probing and the typed generator
+(Section~\ref{sec:step-run}); the crash oracle and its planted-defect check; the
+triage pipeline (Section~\ref{sec:step-triage}); and the evaluation.
+
+\paragraph{Joint.} The choice of target and corpus source, the root-cause
+analysis of all four defects, both patches, the test suite and this paper.
+
+\medskip\noindent
+\begin{tabular}{@{}p{0.46\linewidth}p{0.46\linewidth}@{}}
+Signed: \rule{0.62\linewidth}{0.4pt} & Signed: \rule{0.62\linewidth}{0.4pt} \\
+Ayush Singh Chauhan (240101117) & Mehul Raj (240101125) \\
+\end{tabular}

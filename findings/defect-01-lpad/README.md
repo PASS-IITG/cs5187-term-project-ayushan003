@@ -62,8 +62,13 @@ Against a pre-fix build, from a recorded seed, in one case:
 
 ```bash
 export GRAFT_TURSO_BIN=~/targets/turso-prefix/target/release/tursodb
-python -m graft.campaign --target turso --mode both --seed-start 101 --max-cases 1
+python -m graft.campaign --target turso --mode both --seed-start 4553 --max-cases 1
+# select LPAD('a''b', 9223372036854775807, 'ABC'), LPAD('0', 1, 'A'),
+#        LPAD('a''b', 127, 'ABC'), RPAD('%', 127, 'A')
 ```
 
-Signature `64513113c675`. The mined-template arm reaches it at seed 914 and the
-generator arm at 762; see [`../../experiments/README.md`](../../experiments/README.md).
+That is the four-call template from the mined DuckDB test, with the huge length
+in its first `lpad` and only a small length in its `rpad`. The mined-template
+arm alone regenerates it at seed 7039. Signature `64513113c675`, which defect #2
+shares; in every run of [`../../experiments/README.md`](../../experiments/README.md)
+the *first* hit on that signature happened to be an `rpad` call.

@@ -40,7 +40,7 @@ Which signature each arm reached, and at which seed:
 
 | signature | defect | `variants` | `fuzzer` | `both` |
 |---|---|---|---|---|
-| `64513113c675` | #1, #2 — `lpad`/`rpad` allocate before validating | seed 914 | seed 762 | **seed 101** |
+| `64513113c675` | #1, #2 — `lpad`/`rpad` allocate before validating (first hit: `rpad` in every arm) | seed 914 | seed 762 | **seed 101** |
 | `40d2c580f251` | #3 — `repeat` size computation overflows | seed 10180 | seed 5367 | **seed 5080** |
 | `541c97fa5dd9` | #4 — character count checked against a byte limit | not reached | seed 6376 | **seed 5429** |
 

@@ -41,11 +41,17 @@ export GRAFT_TURSO_BIN=~/targets/turso-prefix/target/release/tursodb
 
 | defect | signature | command |
 |---|---|---|
-| 1, 2 | `64513113c675` | `python -m graft.campaign --target turso --mode both --seed-start 101 --max-cases 1` |
+| 1 (`lpad`) | `64513113c675` | `python -m graft.campaign --target turso --mode both --seed-start 4553 --max-cases 1` |
+| 2 (`rpad`) | `64513113c675` | `python -m graft.campaign --target turso --mode both --seed-start 101 --max-cases 1` |
 | 3 | `40d2c580f251` | `python -m graft.campaign --target turso --mode both --seed-start 5080 --max-cases 1` |
 | 4 | `541c97fa5dd9` | `python -m graft.campaign --target turso --mode both --seed-start 5429 --max-cases 1` |
 
-Per input source, all verified the same way:
+Each seed was run and checked to call the function its defect names: seed 4553
+is an `lpad` call and seed 101 an `rpad` call, although both land on the shared
+signature `64513113c675`.
+
+First hit per signature, per input source, all verified the same way. For the
+shared `lpad`/`rpad` signature, the first hit in every run was an `rpad` call:
 
 | signature | mined templates | typed generator |
 |---|---|---|

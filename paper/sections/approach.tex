@@ -1,28 +1,85 @@
 \section{Approach}
 \label{sec:approach}
-%% Start with the figure and the main idea in 2-3 sentences.
-%% One \subsection per step, titled "Step N: ..." matching the figure numbers.
-%% Say what is NOT new: "We do not claim this step as new. Everything after it is."
-%% Lists of actions use (i)~...; (ii)~...; inline.
 
-\focus{\textbf{Workflow.} Show how your method works end to end. Start with
-  the overview figure (Figure~\ref{fig:overview}) and state the main idea in
-  2--3 sentences: what goes in, what comes out, what loops, what is
-  expensive. Then one \texttt{\textbackslash subsection} per numbered box in
-  the figure --- the step numbers in the text must match the figure. Say
-  plainly which steps are yours and which you reuse (``We do not claim this
-  step as new'').}
-
-Figure~\ref{fig:overview} shows the steps of \tool. The main idea is
-\todo{one sentence}.
+Figure~\ref{fig:overview} shows the steps of \tool. The main idea is to aim
+testing at the blind spot of the incumbent fuzzer, and to take the statements
+that reach it from bug reports another engine's maintainers have already
+reduced. Two kinds of input go in: the incumbent fuzzer's source, and a bug
+tracker. One kind comes out: a statement that ends the engine's process, with the
+seed that regenerates it. Step~3 loops over seeds and is the only expensive step.
 
 \begin{figure}[t]
   \centering
   \input{figures/overview}
-  \caption{Overview of \tool. \todo{What loops, what is expensive.}}
+  \caption{Overview of \tool. Step~1 runs once and tells Step~3 where to aim.
+  Steps~2 and~3 supply two sources of statements, mined templates and a typed
+  generator. Step~3 loops over seeds and is the only step whose cost grows with
+  the budget; a crash goes to Step~4.}
   \label{fig:overview}
 \end{figure}
 
-\subsection{Step 1: \todo{Name}}
-\label{sec:step1}
-\todo{Text.}
+\subsection{Step 1: Measure the Blind Spot}
+\label{sec:step-blind}
+We read the incumbent fuzzer's source and extract three facts: (i)~its function
+vocabulary \Voc; (ii)~its literal domain \Lit; and (iii)~its reference engine
+\Rengine. For Turso these are a table of 47 scalar functions and a default literal
+policy in two source files~\cite{tursofuzzer}. The policy sets
+\texttt{int\_max} to 1{,}000{,}000 and restricts strings to alphanumeric
+characters of at most 50 bytes. Every function outside \Voc, every integer outside
+the range, every non-alphanumeric string, and every function SQLite lacks is in
+\Blind by Equation~\eqref{eq:blind}. This step takes reading, not running. It
+needs no new tool, and we do not claim reading source code as new. What we
+claim is that this reading should come first.
+
+\subsection{Step 2: Mine Reports and Make Templates}
+\label{sec:step-mine}
+\tool collects closed issues that carry the tracker's label for a confirmed
+defect; for DuckDB this label is \emph{reproduced}. For each issue it fetches the
+fixing commit and the regression test that the fix added, and extracts every SQL
+statement from that test and from the issue body. Setup statements such as
+\sql{CREATE TABLE} and \sql{INSERT} are kept with their query, so a reproduction
+brings its own schema and data.
+
+Each extracted query becomes a template. \tool replaces every literal with a
+hole typed by the literal's kind (integer, real or string) and leaves everything
+else exactly as written: function names, nesting, clauses and setup.
+Figure~\ref{fig:motivating}b shows the result for one query. We keep the
+structure fixed on purpose. Re-pointing a mined query at a new schema would need
+column types and arities to match, and a wrong substitution produces SQL that
+merely looks plausible. A query whose structure is unchanged is valid by
+construction, so no repair step is needed. The cost is that \tool cannot explore
+a structure that no report contains.
+
+\subsection{Step 3: Fill with Boundary Values and Run}
+\label{sec:step-run}
+\tool fills each hole from a pool weighted toward the edges of each type. For
+integers the pool holds zero, $\pm 1$, the limits of 8-, 16- and 32-bit integers,
+and the limits of 64-bit integers, including \imax. Every random choice comes
+from a generator seeded per case, and the seed is stored with each result.
+
+Mined templates are one source of statements. The second is a typed SQL generator
+that builds a schema, inserts rows, and composes expressions and queries. It
+emits only features that the target engine accepted when \tool probed it, so it
+rarely wastes a case on syntax the engine rejects. Its string pool includes
+multi-byte values such as \sql{'é'} and three-byte Chinese characters. A command
+line flag selects either source or both.
+
+Each case, meaning its setup statements and its query, runs in a fresh
+\texttt{tursodb} process under a time limit and a memory limit. The crash oracle classifies the outcome into one of six classes
+(\emph{none}, \emph{user error}, \emph{internal error}, \emph{panic},
+\emph{crash}, \emph{timeout}) and reports only the last four. We do not claim the
+crash oracle as new; fuzzers have used it for decades. We chose it because it is
+the one oracle that can judge a function the reference engine lacks.
+
+\subsection{Step 4: Reduce, Re-check and Report}
+\label{sec:step-triage}
+A violation is not yet a finding. \tool groups violations by a \emph{signature},
+a hash of the oracle, the error class and the error text with numbers and paths
+removed. It then (i)~reduces the statement while keeping the same violation;
+(ii)~re-runs it on a fresh process and on a build of the current upstream main
+branch, so that a defect fixed last week is not reported; (iii)~searches the
+upstream tracker and records the queries it used; and (iv)~drafts a report. A
+person reads the draft, reproduces it, and decides whether to file it. Reduction
+by repeated deletion is standard and we do not claim it as new. The duplicate
+check matters more than it looks. In our campaign it withheld one candidate,
+because an upstream pull request had already changed the code it touched.

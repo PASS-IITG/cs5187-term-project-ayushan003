@@ -1,16 +1,59 @@
 \section{Related Work}
 \label{sec:related}
-%% One \paragraph{Topic.} per line of work, closest first ("Closest to us is
-%% the work of ..."). Summarise each work in one sentence with its citation.
-%% END EVERY PARAGRAPH with how we differ: "We share their goal, but ...",
-%% "These methods ..., but only for ... We aim at ...".
-%% Cite own prior work in the third person while anonymous.
-\focus{\textbf{Related work.} Group prior work by topic, closest to your
-  project first. One \texttt{\textbackslash paragraph\{Topic.\}} per line of
-  work, each summarised in one or two sentences with a \emph{verified}
-  citation. \textbf{End every paragraph with how you differ} (``We share
-  their goal, but \ldots''). Do not just list papers --- position yours
-  against them. Fabricated citations are not accepted.}
 
-\paragraph{\todo{Closest topic}.} Closest to us is \todo{}. We share their
-goal, but \todo{difference}.
+\paragraph{Grammar-based SQL generation.} Closest to us is SQLBull, which starts
+generation from grammar rules a tester marks as feature-rich, then builds a path
+back to the root so that every query contains the rule; it found 63 previously
+unknown defects in five engines, all crashes, internal errors or assertion
+failures~\cite{liang2026sqlbull}. SQUIRREL keeps mutated SQL valid and guides the search with coverage
+feedback~\cite{zhong2020squirrel}. We
+share their goal and their kind of oracle, but we choose where to aim differently.
+SQLBull aims at deep grammar, a property of the language. We aim at what a
+specific incumbent fuzzer cannot express, a property of its source, and we take
+the queries from another engine's bug reports rather than from a grammar walk.
+
+\paragraph{Oracles for database engines.} Ternary logic partitioning splits a
+query into three partitions whose union must equal the
+original~\cite{rigger2020tlp}. Non-optimizing reference engine construction
+compares an optimized query with a rewrite the optimizer cannot
+touch~\cite{rigger2020norec}. Both find wrong answers that leave the process
+running, which a crash oracle cannot see. We use the weaker oracle on purpose:
+it needs neither a reference engine nor an equivalent rewrite, so it can judge
+\sql{lpad}, which SQLite does not have.
+
+\paragraph{Keeping generated input valid.} Grammar-based whitebox fuzzing lifts
+symbolic constraints to tokens so that solved inputs parse~\cite{godefroid2008grammar}.
+Fuzzilli mutates an intermediate language in which every program stays
+valid~\cite{gross2023fuzzilli}. Repair-driven greybox fuzzing mutates freely and
+repairs the result back to valid syntax~\cite{bendrissou2026repair}. Directed
+grammar-based generation learns which input structures reach a testing goal
+from feedback~\cite{kirschner2025directed}. FuzzNG fuzzes Linux system calls
+without hand-written descriptions, and found defects in components that Syzkaller
+had covered for years~\cite{bulekov2023fuzzng}. We solve the validity problem
+more crudely: we keep a mined query's structure fixed and change only its
+literals, and we learn nothing from feedback. FuzzNG's lesson, that a
+long-running incumbent fuzzer still leaves reachable defects, holds here too; we
+differ in locating those defects by reading the incumbent's source rather than
+by reshaping its input space.
+
+\paragraph{Recurring defects.} VulPA writes a known vulnerability as a pattern
+and finds other code that breaks it with multi-object typestate
+analysis~\cite{cao2025vulpa}. FirmRec builds signatures of known
+vulnerabilities from how they are exploited and finds them again in firmware
+images~\cite{xiao2024firmrec}. A recent study measures the errors of
+recurring-vulnerability detectors on vulnerabilities inherited through reused
+code~\cite{cao2025antman}. Another shows that code which looks
+like a known vulnerability but is already patched causes many false
+alarms~\cite{tan2025fvf}. We share the question these works ask: does a known
+defect have siblings? But they answer it statically, within one code base or
+across copied code. We answer it dynamically, across two engines that share no
+code. Our duplicate check before filing plays the role that a patched-code
+filter plays for them, but each of our answers is a statement that either ends
+the process or does not, so there is no false alarm to filter.
+
+\paragraph{Learning from patches.} Mystique ports a vulnerability patch from one
+branch to another with a language model~\cite{wu2025mystique}, and VicDiff
+locates the commit that introduced a vulnerability by comparing patching
+patterns~\cite{guo2026vicdiff}. Both reuse what a patch says about a defect. We
+reuse what a fix's regression test says about where defects live, and move a
+failing input rather than a fix.

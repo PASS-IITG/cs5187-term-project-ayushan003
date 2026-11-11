@@ -86,8 +86,9 @@ Four sub-questions, answered in [`docs/evaluation.md`](docs/evaluation.md) and
             reduce ─▶ re-verify on current main ─▶ duplicate search ─▶ report
 ```
 
-The source report, `duckdb/duckdb#27846`, is about pad functions mishandling
-multi-byte fills. Templated, it becomes:
+The source report, `duckdb/duckdb#27846`, is a performance regression in
+`lpad` and `rpad`. Its fix added a regression test with four pad calls, three of
+them using multi-byte fills. Templated, that test query becomes:
 
 ```sql
 select LPAD({s4}, {n0}, {s5}), LPAD({s6}, {n1}, {s7}),
@@ -159,6 +160,14 @@ we then diagnosed and fixed it. Issue
 
 The two are siblings: the same function, the same class of unchecked size, in
 two different units — the second visible only once the first was closed.
+
+## The report
+
+The FSE-format paper is in [`paper/`](paper/), written in the ACM `acmart`
+template with one file per section under `paper/sections/`. Build it with
+`make` inside `paper/`, and run `make check` there for the template's
+submission checks. Every number in it is traced to a file in
+[`paper/HANDOFF.md`](paper/HANDOFF.md) §4.
 
 ## Reproducing
 
@@ -236,6 +245,7 @@ graft/
 │   ├── defect-01-lpad/  defect-02-rpad/
 │   ├── defect-03-repeat/  defect-04-multibyte-fill/
 │   └── patches/                     the two patches, PR bodies and issue texts
+├── paper/                           the FSE-format report (acmart LaTeX)
 ├── docs/                            motivation, related work, methodology, design,
 │                                    implementation, evaluation, spec, provenance,
 │                                    references

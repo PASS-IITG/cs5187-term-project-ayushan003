@@ -2,9 +2,231 @@
 %% publisher page. Record the date of each verification pass here.
 %% Web pages / advisories: @misc with url and note = {Accessed: YYYY-MM-DD}.
 %% Fabricated or wrong citations can lead to desk rejection.
+%%
+%% Verification pass 2026-11-11: every @inproceedings/@article below was
+%% retrieved from Crossref (api.crossref.org/works/<doi>) and its title,
+%% authors, venue and year copied from that record. Upstream issue and pull
+%% request entries were checked against the GitHub record on 2026-11-10.
 
-@misc{placeholder,
-  title = {{Placeholder entry -- delete}},
-  howpublished = {\url{https://example.org}},
-  note = {Accessed: 2026-01-01}
+%% ---------------------------------------------------------------- generation
+
+@inproceedings{godefroid2008grammar,
+  author    = {Godefroid, Patrice and Kiezun, Adam and Levin, Michael Y.},
+  title     = {Grammar-Based Whitebox Fuzzing},
+  booktitle = {Proceedings of the 29th ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI)},
+  pages     = {206--215},
+  publisher = {ACM},
+  year      = {2008},
+  doi       = {10.1145/1375581.1375607}
+}
+
+@inproceedings{liang2026sqlbull,
+  author    = {Liang, Yu and Liu, Peng},
+  title     = {Efficiently Detecting {DBMS} Bugs through Bottom-up Syntax-based {SQL} Generation},
+  booktitle = {Proceedings of the Network and Distributed System Security Symposium (NDSS)},
+  publisher = {Internet Society},
+  year      = {2026},
+  doi       = {10.14722/ndss.2026.240198}
+}
+
+@inproceedings{zhong2020squirrel,
+  author    = {Zhong, Rui and Chen, Yongheng and Hu, Hong and Zhang, Hangfan and Lee, Wenke and Wu, Dinghao},
+  title     = {{SQUIRREL}: Testing Database Management Systems with Language Validity and Coverage Feedback},
+  booktitle = {Proceedings of the 2020 ACM SIGSAC Conference on Computer and Communications Security (CCS)},
+  pages     = {955--970},
+  publisher = {ACM},
+  year      = {2020},
+  doi       = {10.1145/3372297.3417260}
+}
+
+@article{kirschner2025directed,
+  author    = {Kirschner, Lukas and Soremekun, Ezekiel},
+  title     = {Directed Grammar-Based Test Generation},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {51},
+  number    = {12},
+  publisher = {IEEE},
+  year      = {2025},
+  doi       = {10.1109/TSE.2025.3627220}
+}
+
+@inproceedings{gross2023fuzzilli,
+  author    = {Gro{\ss}, Samuel and Koch, Simon and Bernhard, Lukas and Holz, Thorsten and Johns, Martin},
+  title     = {{FUZZILLI}: Fuzzing for {JavaScript} {JIT} Compiler Vulnerabilities},
+  booktitle = {Proceedings of the Network and Distributed System Security Symposium (NDSS)},
+  publisher = {Internet Society},
+  year      = {2023},
+  doi       = {10.14722/ndss.2023.24290}
+}
+
+@article{bendrissou2026repair,
+  author    = {Bendrissou, Bachir and Donaldson, Alastair F. and Cadar, Cristian},
+  title     = {Repair-Driven Greybox Fuzzing},
+  journal   = {Proceedings of the ACM on Software Engineering},
+  volume    = {3},
+  number    = {ISSTA},
+  publisher = {ACM},
+  year      = {2026},
+  doi       = {10.1145/3832229}
+}
+
+@inproceedings{bulekov2023fuzzng,
+  author    = {Bulekov, Alexander and Das, Bandan and Hajnoczi, Stefan and Egele, Manuel},
+  title     = {No Grammar, No Problem: Towards Fuzzing the {Linux} Kernel without System-Call Descriptions},
+  booktitle = {Proceedings of the Network and Distributed System Security Symposium (NDSS)},
+  publisher = {Internet Society},
+  year      = {2023},
+  doi       = {10.14722/ndss.2023.24688}
+}
+
+%% ---------------------------------------------------------------- DBMS oracles
+
+@article{rigger2020tlp,
+  author    = {Rigger, Manuel and Su, Zhendong},
+  title     = {Finding Bugs in Database Systems via Query Partitioning},
+  journal   = {Proceedings of the ACM on Programming Languages},
+  volume    = {4},
+  number    = {OOPSLA},
+  publisher = {ACM},
+  year      = {2020},
+  doi       = {10.1145/3428279}
+}
+
+@inproceedings{rigger2020norec,
+  author    = {Rigger, Manuel and Su, Zhendong},
+  title     = {Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction},
+  booktitle = {Proceedings of the 28th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering (ESEC/FSE)},
+  pages     = {1140--1152},
+  publisher = {ACM},
+  year      = {2020},
+  doi       = {10.1145/3368089.3409710}
+}
+
+%% ---------------------------------------------------------------- known defects
+
+@article{cao2025vulpa,
+  author    = {Cao, Liqing and Li, Haofeng and Shi, Chenghang and Lu, Jie and Meng, Haining and Li, Lian and Xue, Jingling},
+  title     = {{VulPA}: Detecting Semantically Recurring Vulnerabilities with Multi-object Typestate Analysis},
+  journal   = {Proceedings of the ACM on Software Engineering},
+  volume    = {2},
+  number    = {FSE},
+  publisher = {ACM},
+  year      = {2025},
+  doi       = {10.1145/3729378}
+}
+
+@inproceedings{xiao2024firmrec,
+  author    = {Xiao, Haoyu and Zhang, Yuan and Shen, Minghang and Lin, Chaoyang and Zhang, Can and Liu, Shengli and Yang, Min},
+  title     = {Accurate and Efficient Recurring Vulnerability Detection for {IoT} Firmware},
+  booktitle = {Proceedings of the 2024 ACM SIGSAC Conference on Computer and Communications Security (CCS)},
+  pages     = {3317--3331},
+  publisher = {ACM},
+  year      = {2024},
+  doi       = {10.1145/3658644.3670275}
+}
+
+@article{cao2025antman,
+  author    = {Cao, Yiheng and Wu, Susheng and Wang, Ruisi and Chen, Bihuan and Huang, Yiheng and Lu, Chenhao and Zhou, Zhuotong and Peng, Xin},
+  title     = {Recurring Vulnerability Detection: How Far Are We?},
+  journal   = {Proceedings of the ACM on Software Engineering},
+  volume    = {2},
+  number    = {ISSTA},
+  publisher = {ACM},
+  year      = {2025},
+  doi       = {10.1145/3728901}
+}
+
+@inproceedings{tan2025fvf,
+  author    = {Tan, Zixuan and Zhou, Jiayuan and Hu, Xing and Pan, Shengyi and Liu, Kui and Xia, Xin},
+  title     = {Similar but Patched Code Considered Harmful: The Impact of Similar but Patched Code on Recurring Vulnerability Detection and How to Remove Them},
+  booktitle = {Proceedings of the 47th IEEE/ACM International Conference on Software Engineering (ICSE)},
+  publisher = {IEEE},
+  year      = {2025},
+  doi       = {10.1109/ICSE55347.2025.00110}
+}
+
+@article{wu2025mystique,
+  author    = {Wu, Susheng and Wang, Ruisi and Cao, Yiheng and Chen, Bihuan and Zhou, Zhuotong and Huang, Yiheng and Zhao, JunPeng and Peng, Xin},
+  title     = {Mystique: Automated Vulnerability Patch Porting with Semantic and Syntactic-Enhanced {LLM}},
+  journal   = {Proceedings of the ACM on Software Engineering},
+  volume    = {2},
+  number    = {FSE},
+  publisher = {ACM},
+  year      = {2025},
+  doi       = {10.1145/3715718}
+}
+
+@inproceedings{guo2026vicdiff,
+  author    = {Guo, Qixuan and He, Yongzhong},
+  title     = {Accurate Identification of the Vulnerability-Introducing Commit based on Differential Analysis of Patching Patterns},
+  booktitle = {Proceedings of the Network and Distributed System Security Symposium (NDSS)},
+  publisher = {Internet Society},
+  year      = {2026},
+  doi       = {10.14722/ndss.2026.230140}
+}
+
+%% ---------------------------------------------------------------- upstream record
+
+@misc{turso,
+  author       = {{Turso Database}},
+  title        = {Turso: an in-process {SQL} database, compatible with {SQLite}},
+  year         = {2026},
+  howpublished = {\url{https://github.com/tursodatabase/turso}},
+  note         = {Version 0.9.0-pre.2. Accessed: 2026-11-11}
+}
+
+@misc{tursofuzzer,
+  author       = {{Turso Database}},
+  title        = {Differential oracle: scalar function vocabulary and literal policy},
+  year         = {2026},
+  howpublished = {\url{https://github.com/tursodatabase/turso/tree/b588fbdc6c016cb3626d0ab464a7c45a54bc2b86/testing/differential-oracle/sql_gen/src}},
+  note         = {Files \texttt{functions.rs} and \texttt{policy.rs} at commit b588fbdc6. Accessed: 2026-11-11}
+}
+
+@misc{duckdb27846,
+  author       = {{DuckDB}},
+  title        = {Issue \#27846: lpad/rpad {$\sim$}75\% slower in 2.0.0 than in 1.5.5 ({ASCII} pad character)},
+  year         = {2026},
+  howpublished = {\url{https://github.com/duckdb/duckdb/issues/27846}},
+  note         = {Closed 2026-10-27, labelled \emph{reproduced}. Accessed: 2026-10-28}
+}
+
+@misc{turso11219,
+  author       = {Chauhan, Ayush Singh and Raj, Mehul},
+  title        = {Issue \#11219: {LPAD/RPAD} with an extremely large length aborts the process instead of returning a {SQL} error},
+  year         = {2026},
+  howpublished = {\url{https://github.com/tursodatabase/turso/issues/11219}},
+  note         = {Closed as completed, 2026-11-02. Accessed: 2026-11-10}
+}
+
+@misc{turso11225,
+  author       = {Chauhan, Ayush Singh and Raj, Mehul},
+  title        = {Pull request \#11225: check the requested length before allocating in lpad/rpad/repeat},
+  year         = {2026},
+  howpublished = {\url{https://github.com/tursodatabase/turso/pull/11225}},
+  note         = {Merged 2026-11-02 as commit ec86571642a6. Accessed: 2026-11-10}
+}
+
+@misc{turso11260,
+  author       = {Chauhan, Ayush Singh and Raj, Mehul},
+  title        = {Issue \#11260: lpad/rpad with a multi-byte fill build the whole string before the byte limit rejects it},
+  year         = {2026},
+  howpublished = {\url{https://github.com/tursodatabase/turso/issues/11260}},
+  note         = {Closed as completed, 2026-11-02. Accessed: 2026-11-10}
+}
+
+@misc{turso11259,
+  author       = {Chauhan, Ayush Singh and Raj, Mehul},
+  title        = {Pull request \#11259: check the byte length of a multi-byte pad before building it},
+  year         = {2026},
+  howpublished = {\url{https://github.com/tursodatabase/turso/pull/11259}},
+  note         = {Merged 2026-11-02 as commit 121cd0a8c80b. Accessed: 2026-11-10}
+}
+
+@misc{graftrepo,
+  author       = {Chauhan, Ayush Singh and Raj, Mehul},
+  title        = {{GRAFT}: source code, mined corpus, defect reproductions, patches and experiment data},
+  year         = {2026},
+  howpublished = {\url{https://github.com/PASS-IITG/cs5187-term-project-ayushan003}},
+  note         = {Accessed: 2026-11-11}
 }

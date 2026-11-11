@@ -1,8 +1,16 @@
 \section{Conclusion}
 \label{sec:conclusion}
-%% Two short paragraphs. (1) The problem again in 2-3 sentences with the key
-%% number. (2) "We presented \tool, which ..." + the main results with the
-%% same numbers as the abstract. No new claims, no new numbers, no hype.
-\todo{Problem and key number.}
 
-We presented \tool, which \todo{}.
+A fuzzer cannot test a function it never generates or judge one its reference
+engine lacks. Turso fuzzes itself with 41{,}205 lines of Rust in continuous
+integration. Yet \sql{select LPAD('a', 9223372036854775807, 'b')} ended its
+process. None of its fuzzers ever calls \sql{lpad}, their integers stop at
+$10^6$, and SQLite has no \sql{lpad} to compare against.
+
+We presented \tool, which reads an incumbent fuzzer's source to find its blind
+spot. It fills that region with the shapes of another engine's bug reports and
+with typed generation. It judges results with an oracle that needs no reference
+engine. It found four previously unknown defects in Turso, all fixed upstream by
+our two merged patches, and it regenerates each from a recorded seed. At an equal
+budget of 20{,}000 cases the typed generator reached three distinct defects and
+the mined reports two, and drawing from both found the first defect at case 101.

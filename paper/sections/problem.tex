@@ -1,11 +1,41 @@
 \section{Problem Statement}
 \label{sec:problem}
-%% "We now state the problem precisely." Define every set/symbol (macros in
-%% macros.tex). \paragraph{Goal.} with the formula. Say why it is hard
-%% (cite the known complexity result). End with a question-paragraph that
-%% answers the obvious objection: \paragraph{Why not ...?}
-\todo{Definitions.}
 
-\paragraph{Goal.} \todo{Formula and the one or two things we look for.}
+We now state the problem precisely. Let \Fz be the fuzzer that already tests an
+engine~$E$, and let \Rengine be the reference engine that \Fz compares against. We
+write \Voc for the set of SQL functions that \Fz can emit, and \Lit for the
+literals it can emit: a range of integers and a set of strings. We write \VocR
+for the functions that \Rengine implements.
 
-\paragraph{Why not \todo{the obvious alternative}?} \todo{Answer.}
+A statement $q$ is \emph{expressible} by \Fz if every function in $q$ is in \Voc
+and every literal in $q$ is in \Lit. A statement is \emph{judgeable} if every
+function in $q$ is in \VocR. The \emph{blind spot} of \Fz is
+\begin{equation}
+  \label{eq:blind}
+  \Blind = \{\, q \mid q \text{ is not expressible by } \Fz
+           \ \lor\ q \text{ is not judgeable against } \Rengine \,\}.
+\end{equation}
+\Fz never generates a statement outside its own vocabulary or literal domain,
+however long it runs. A statement that \Fz does generate but cannot judge is
+generated in vain. Both halves of~\eqref{eq:blind} are properties of the source
+code of \Fz and \Rengine, so \Blind can be measured before any test runs.
+
+\paragraph{Goal.} Find statements $q \in \Blind$ on which $E$ violates the crash
+oracle, without a reference engine, and with each finding regenerated from a
+recorded seed. We look for two things: which functions and values put a
+statement in \Blind, and where to get statements in that region that are likely
+to break $E$.
+
+\paragraph{Why not widen the incumbent fuzzer instead?} Its maintainers could add
+\sql{lpad} to \Voc and \imax to \Lit, and the defects in this paper would then be
+within reach. But that needs someone to know which function and which value to
+add. The blind spot is large: any function outside \Voc and any value outside
+\Lit belongs to it. Bug reports from another engine point at the corners where
+someone has already been hurt. A crash oracle then removes the need for a
+reference engine, so a function SQLite lacks can still be tested.
+
+\paragraph{Why not run the other engine's tests directly?} A regression test was
+written for the other engine's defect. Its literal values are tuned to that
+defect, which the engine under test probably never had, and its syntax may not
+parse. The structure of the query, meaning which functions are nested how, is
+what carries over. The values have to be chosen again.
