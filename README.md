@@ -163,8 +163,11 @@ two different units — the second visible only once the first was closed.
 
 ## The report
 
-The FSE-format paper is in [`paper/`](paper/), written in the ACM `acmart`
-template with one file per section under `paper/sections/`. Build it with
+The FSE-format paper is [`GRAFT-report.pdf`](GRAFT-report.pdf). Its LaTeX
+source is in [`paper/`](paper/), written in the ACM `acmart` template with one
+file per section under `paper/sections/`;
+[`paper/overleaf.zip`](paper/overleaf.zip) holds just the sources, ready to
+upload to Overleaf as a new project. Build it with
 `make` inside `paper/`, and run `make check` there for the template's
 submission checks. Every number in it is traced to a file in
 [`paper/HANDOFF.md`](paper/HANDOFF.md) §4.
