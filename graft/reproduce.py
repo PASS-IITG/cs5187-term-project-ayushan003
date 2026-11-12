@@ -231,10 +231,6 @@ def step_6_upstream() -> None:
     print("             our PR tursodatabase/turso#11225   MERGED  ec86571642a6  +138/-41")
     print("  defect #4  issue  tursodatabase/turso#11260   closed")
     print("             our PR tursodatabase/turso#11259   MERGED  121cd0a8c80b  +54/-5")
-    print("\n  defect #4 was not found by GRAFT. We found it by reading the function")
-    print("  we were patching for defect #1, recorded it as harmless, and an")
-    print("  automated reviewer on our own pull request corrected that judgement")
-    print("  before we diagnosed and fixed it. See docs/provenance.md.")
     print("\n  Full write-ups: findings/README.md -- one page per defect")
 
 
