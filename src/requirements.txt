@@ -1,5 +1,5 @@
 # GRAFT dependencies. Pinned to the versions the recorded results were produced
-# with (see README.md, "Experimental setup", for the full environment).
+# with (see README.md, "Requirements", for the full environment).
 #
 # Direct:
 PyYAML==6.0.3          # configs/*.yaml

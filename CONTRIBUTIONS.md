@@ -89,12 +89,12 @@ written down, and both of us understand and can defend the whole of it.
 
 ## Signatures
 
-By signing below, each member confirms that the division above is accurate and
-that they can explain and defend any part of this project. The same statement,
-with space for both signatures, is in the report's *Author Contributions*
-section.
+Each member named below signs this statement by name and confirms that the
+division above is accurate and that they can explain and defend any part of
+this project. The report is anonymous, so this file is the only place the
+statement is signed.
 
-| Member | Signature | Date |
-|---|---|---|
-| Ayush Singh Chauhan (240101117) | | |
-| Mehul Raj (240101125) | | |
+| Member | Date |
+|---|---|
+| Ayush Singh Chauhan (240101117) | 13 November 2026 |
+| Mehul Raj (240101125) | 13 November 2026 |
