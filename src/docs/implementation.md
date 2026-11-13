@@ -1,12 +1,14 @@
 # Implementation notes
 
 Details a reader needs in order to work on the code, or to judge whether the
-claims in the paper (`GRAFT-report.pdf`) are supported by it. Only components that exist
+claims in the paper (`paper/GRAFT-report.pdf`) are supported by it. Only components that exist
 in this repository are described.
 
 ---
 
 ## Running things
+
+All commands run from `src/`.
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate

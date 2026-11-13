@@ -1,7 +1,8 @@
 # Experiments
 
 Three experiments, each with its raw output committed next to this file. They
-back Table 2 of the report (`GRAFT-report.pdf`, Section 5.6).
+back Table 2 of the report ([`paper/GRAFT-report.pdf`](../../paper/GRAFT-report.pdf), Section 5.6).
+All commands run from `src/`.
 
 | File | What it holds |
 |---|---|
@@ -58,7 +59,7 @@ Which signature each arm reached, and at which seed:
 body and `repeat`. The generator reaches one more signature, but it is defect #1
 again, not a new defect.
 
-**No arm reaches defect #4.** Experiments 2 and 3 show why.
+**Defect #4 lies outside the boundary pools.** Experiments 2 and 3 measure this.
 
 **Transfer is more efficient per executed case than its validity rate
 suggests.** Only 8.9% of mined cases run at all — most carry DuckDB syntax Turso

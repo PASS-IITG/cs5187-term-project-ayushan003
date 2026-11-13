@@ -1,4 +1,4 @@
-# GRAFT — see README.md
+# GRAFT — see ../README.md. Run make from this directory (src/).
 PY ?= python3
 
 .PHONY: help reproduce test campaign probe smoke corpus clean

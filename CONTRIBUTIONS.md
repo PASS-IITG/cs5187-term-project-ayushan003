@@ -41,17 +41,17 @@ the first implementation — and was reviewed, debugged and extended by the othe
 
 - **Corpus pipeline.** Mining closed, reproduced defects from DuckDB's issue
   tracker, and extracting runnable reproductions from fix tests and issue bodies
-  (`graft/corpus/github.py`, `fetch.py`, `extract.py`).
+  (`src/graft/corpus/github.py`, `fetch.py`, `extract.py`).
 - **The transfer mechanism.** Templating a mined reproduction so its structure is
   kept and its literals are regenerated from boundary-weighted pools
-  (`graft/corpus/templates.py`) — the component the `lpad`, `rpad` and `repeat`
+  (`src/graft/corpus/templates.py`) — the component the `lpad`, `rpad` and `repeat`
   defects all came through.
 - **Engine interface.** Driving `tursodb` as a subprocess with timeouts and
   memory caps, and the error classification that keeps a rejected statement from
-  being read as a defect (`graft/engines/`), including the interleaved-diagnostic
+  being read as a defect (`src/graft/engines/`), including the interleaved-diagnostic
   fix in `embedded_diagnostic`.
 - **Campaign driver.** The seeded, resumable loop and its two case sources
-  (`graft/campaign.py`).
+  (`src/graft/campaign.py`).
 - **Upstream submission.** Filing issues #11219 and #11260, and handling review
   on both pull requests.
 
@@ -59,18 +59,18 @@ the first implementation — and was reviewed, debugged and extended by the othe
 
 - **Capability probing.** Establishing what the target engine actually supports
   by probing the real binary instead of assuming, including the measured results
-  that corrected our assumptions (`graft/generate/capabilities.py`).
+  that corrected our assumptions (`src/graft/generate/capabilities.py`).
 - **The typed SQL generator.** Schemas, data, expressions and queries, gated by
-  the probed capability set (`graft/generate/`).
+  the probed capability set (`src/graft/generate/`).
 - **The oracle and its validation.** The crash oracle, and the planted-bug engine
   that proves it fires on a real defect and stays silent on a correct engine
-  (`graft/oracle/`, `graft/engines/fake.py`, `tests/test_oracle_planted.py`).
+  (`src/graft/oracle/`, `src/graft/engines/fake.py`, `src/tests/test_oracle_planted.py`).
 - **Triage pipeline.** Statement reduction that preserves the violation,
   re-verification on a freshly built current `main`, the upstream duplicate
-  search with its queries recorded, and report drafting (`graft/triage/`).
+  search with its queries recorded, and report drafting (`src/graft/triage/`).
 - **Evaluation.** The blind-spot measurement against Turso's own fuzzer
   configuration, the before/after capture on the pre-fix and post-fix builds, and
-  the reproducibility checks (`experiments/`, `graft/reproduce.py`).
+  the reproducibility checks (`src/experiments/`, `src/graft/reproduce.py`).
 
 ### Joint
 

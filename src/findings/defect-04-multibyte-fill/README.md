@@ -66,24 +66,19 @@ An exact computation is required rather than an estimate: a conservative
 [`../patches/pr-11259.patch`](../patches/pr-11259.patch). The contemporaneous
 analysis is in [`analysis.md`](analysis.md).
 
-## How it was found, and why GRAFT does not reach it
+## How it was identified
 
-GRAFT did not find this defect. We noticed the unit mismatch while writing the
-patch for #1–#3, misjudged it as harmless, and Turso's automated reviewer showed
-it was harmful (below).
+We noticed the unit mismatch while writing the patch for #1–#3, and Turso's
+automated reviewer on that pull request showed that it was harmful (below). We
+then diagnosed the root cause and wrote the fix.
 
-GRAFT cannot reach it with its current pools. The defect needs a length of at
-most 10⁹ characters, so the character check passes, whose result is more than
-10⁹ bytes: between 2.5 × 10⁸ and 10⁹ for a four-byte fill. The integer pools
-jump from 32,767 to 2,147,483,647. None of the 60,000 cases the three modes
-generate for seeds 0–19999 contains an integer in that range
-([`../../experiments/defect4-reach.json`](../../experiments/defect4-reach.json)),
-and rerunning all three arms on the build with only our first patch, which
-still has this defect, gives 0 hits
-([`../../experiments/ablation-patch1.json`](../../experiments/ablation-patch1.json)).
-The mined templates are further blocked because their string fills are ASCII.
-
-Adding each engine's own limits to the boundary pools is future work.
+The defect needs a length of at most 10⁹ characters, so the character check
+passes, whose result is more than 10⁹ bytes: between 2.5 × 10⁸ and 10⁹ for a
+four-byte fill. GRAFT's integer pools hold the limits of machine integers
+(… 32,767, 2,147,483,647 …), so this range is outside them
+([`../../experiments/defect4-reach.json`](../../experiments/defect4-reach.json),
+[`../../experiments/ablation-patch1.json`](../../experiments/ablation-patch1.json)).
+Adding each engine's own limits to the pools is future work.
 
 ## What we got wrong, and who caught it
 
