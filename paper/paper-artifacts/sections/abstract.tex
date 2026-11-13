@@ -16,4 +16,5 @@ were merged upstream. None of Turso's own fuzzers can express any of the four,
 since the three functions are absent from all of them. At an equal budget of
 20{,}000 cases, mined reports and typed generation each reached both root causes
 of the three defects, and drawing from both sources found the first defect at
-case 101.
+case 101. The work taught us that reading an incumbent fuzzer's source is a cheap
+and reliable way to decide where to test next.

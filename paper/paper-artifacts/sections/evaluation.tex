@@ -281,7 +281,8 @@ target. At the same budget both sources reached the same two root causes
 found defects~1 and~3 first in time, before the generator's vocabulary contained
 \sql{lpad} or \sql{repeat}; we added those functions to the generator only after
 the defects were filed. And it pointed the work at pad functions in the first
-place. Each source covers a weakness of the other, which is why drawing from both
+place. The fair reading is that each source covers a weakness of the other, which
+is why drawing from both
 reached a defect soonest (Observation~\ref{obs:both}).
 
 \paragraph{Are the defects in one family really four?} They are four ways for a
@@ -294,12 +295,15 @@ which, so that neither inflates the other.
 \paragraph{Would more fuzzing time have found them?} No.
 Observation~\ref{obs:blind} is a property of the fuzzer's source, not of its
 budget. A generator cannot emit a function outside its vocabulary or a value
-outside its domain however long it runs. The same holds for \tool and defect~4:
+outside its domain however long it runs. This is the main practical point of the
+paper: the incumbent fuzzer's run time tells nothing about how close it is to
+these defects. The same holds for \tool and defect~4:
 its pools contain no length in the range that defect needs.
 
 \paragraph{Why did fixing three defects reveal a fourth?} Before the first patch,
 the length check ran after the allocation, so its unit did not matter: the
-process died first. Once the check ran first, its unit decided the outcome. A
+process died first. Once the check ran first, its unit became the thing that
+decided the outcome. A
 patch is a good place to look for the next defect, since it marks code where the
 authors' first understanding was wrong. Our own first understanding of defect~4
 was wrong too, and a reviewer corrected it.

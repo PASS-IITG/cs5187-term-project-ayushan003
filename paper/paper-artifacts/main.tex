@@ -5,15 +5,17 @@
 %%     related work, threats to validity
 %%   * a signed contribution statement in the report
 %%   * the PDF is submitted with the artifact
-%% FSE reviews double-anonymously, but this report names its authors because
-%% the course requires a signed contribution statement. The Author
-%% Contributions section (sections/contributions.tex) states this.
-\documentclass[sigconf]{acmart}
+%%   * FSE reviews double-anonymously, so the report is anonymous: acmart's
+%%     `anonymous` option, no names or affiliations in the source or the PDF,
+%%     and no identifying links. The signed contribution statement with the
+%%     authors' names is CONTRIBUTIONS.md in the replication package.
+%%     `review` adds line numbers, as FSE submissions require.
+\documentclass[sigconf,review,anonymous]{acmart}
 
 \input{macros}
 
 \setcopyright{none}
-\acmConference[CS-5187 Term Project]{CS-5187 Software Analysis, Term Project, in the format of the ACM International Conference on the Foundations of Software Engineering (FSE)}{November 2026}{IIT Guwahati, India}
+\acmConference[Term Project, FSE format]{Term project report in the format of the ACM International Conference on the Foundations of Software Engineering (FSE)}{November 2026}{Submitted for anonymous review}
 \acmYear{2026}
 \acmDOI{}   % a course report has no DOI; acmart otherwise prints a placeholder
 \acmISBN{}
@@ -24,10 +26,8 @@
 
 \title[GRAFT]{GRAFT: Cross-Engine Bug-Report-Guided Fuzzing of a SQLite-Compatible Database}
 
-\author{Ayush Singh Chauhan}
-\affiliation{\institution{Indian Institute of Technology Guwahati}\city{Guwahati}\country{India}}
-\author{Mehul Raj}
-\affiliation{\institution{Indian Institute of Technology Guwahati}\city{Guwahati}\country{India}}
+\author{Anonymous Author(s)}
+\affiliation{\institution{Anonymous Institution}\country{Anonymous}}
 
 \begin{abstract}
 \input{sections/abstract}
@@ -54,7 +54,6 @@
 
 \maketitle
 
-\input{sections/introduction}
 \input{sections/motivation}
 \input{sections/technique}
 \input{sections/implementation}

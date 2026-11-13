@@ -19,7 +19,7 @@ our fix, all four are fixed in Turso by two merged pull requests.
 | **Defects fixed upstream** | 4, through 2 issues and 2 merged pull requests |
 | **Headline reproduction** | `make reproduce` |
 | **Test suite** | 514 tests |
-| **Report** | [`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) |
+| **Report** | [`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) (FSE format, ACM `sigconf`) |
 
 ## Why GRAFT
 
@@ -203,9 +203,13 @@ for each experiment are in [`src/experiments/README.md`](src/experiments/README.
 ```
 .
 ├── paper/                       the report
-│   ├── GRAFT-report.pdf         compiled report (ACM sigconf)
-│   ├── main.tex, sections/      LaTeX source, one file per section
-│   └── Makefile                 builds the PDF; `make check` runs submission checks
+│   ├── GRAFT-report.pdf         the report (FSE format, ACM sigconf, anonymous)
+│   └── paper-artifacts/         the complete LaTeX project
+│       ├── main.tex, macros.tex, references.bib
+│       ├── sections/, figures/  one file per section; the workflow figure
+│       ├── Makefile, scripts/   build, submission checks
+│       ├── paper.conf, .gitignore
+│       └── overleaf.zip         the same sources, ready to import into Overleaf
 ├── src/                         the code
 │   ├── graft/                   the tool
 │   │   ├── engines/             tursodb adapter and a planted-defect test engine
@@ -231,12 +235,23 @@ for each experiment are in [`src/experiments/README.md`](src/experiments/README.
 ## Report
 
 [`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) is the full report in FSE
-format (ACM `sigconf`). It covers the motivation, the technique, the
-implementation, the evaluation, related work and threats to validity. To build
-it from source:
+format, written in the ACM Primary Article Template (`acmart`, `sigconf`) and
+prepared for double-anonymous review. Its sections are Motivation, Technique,
+Implementation, Evaluation, Related Work and Threats to Validity, followed by
+the Conclusion, Data Availability, Use of Generative AI and Author
+Contributions.
+
+The complete LaTeX project is in
+[`paper/paper-artifacts/`](paper/paper-artifacts/), and
+[`overleaf.zip`](paper/paper-artifacts/overleaf.zip) holds the same sources for
+import into Overleaf (*New Project → Upload Project*). To build locally with a
+TeX Live that includes `acmart`:
 
 ```bash
-cd paper && make
+cd paper/paper-artifacts
+make report     # builds main.pdf and copies it to ../GRAFT-report.pdf
+make check      # submission checks: errors, citations, page count
+make overleaf   # rebuilds overleaf.zip from the current sources
 ```
 
 ## License

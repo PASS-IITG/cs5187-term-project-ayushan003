@@ -1,4 +1,5 @@
-\section{Introduction}
+\section{Motivation}
+\label{sec:motivation}
 \label{sec:intro}
 
 Suppose a server process embeds a SQL engine and lets its users format reports
@@ -16,8 +17,9 @@ valid SQL at scale~\cite{zhong2020squirrel,liang2026sqlbull}. All of these tools
 stop at two boundaries: the generator can only emit the functions and values it
 was written to emit, and a differential oracle can only judge a feature that its
 reference engine also implements. We focus on the defects that sit past those
-two boundaries. A fuzzer can run for a year without reaching them, and the time
-it has already run says nothing about how close it is.
+two boundaries. Such defects are silent in a specific way: a fuzzer can run for
+a year without reaching them, and the time it has already run says nothing about
+how close it is.
 
 \begin{figure*}[t]
 \begin{lstlisting}[escapechar=@]
@@ -88,7 +90,7 @@ a fuzzer, spend an hour reading the fuzzer that is already there.
 \paragraph{Research contributions.}
 \begin{itemize}
   \item We define the \emph{blind spot} of an incumbent fuzzer and show that it
-        can be measured from that fuzzer's source (Section~\ref{sec:motivation}).
+        can be measured from that fuzzer's source (Section~\ref{sec:problem}).
   \item We present \tool, which fills the blind spot with the shapes of another
         engine's bug reports and with typed generation, and judges results with an
         oracle that needs no reference engine (Section~\ref{sec:technique}).
@@ -99,3 +101,90 @@ a fuzzer, spend an hour reading the fuzzer that is already there.
         release the tool, the corpus and all data
         (Sections~\ref{sec:rq2} and~\ref{sec:data}).
 \end{itemize}
+
+The rest of this section gives the background the paper needs
+(Section~\ref{sec:background}), states the problem precisely
+(Section~\ref{sec:problem}), and explains why the obvious alternatives do not
+solve it.
+
+\subsection{Background}
+\label{sec:background}
+
+\paragraph{Turso.} Turso~\cite{turso} reimplements SQLite in Rust and aims to
+accept the same SQL. Its shell, \texttt{tursodb}, reads statements on standard
+input. Text and blob results are bounded by a constant,
+\texttt{Value::MAX\_BLOB\_LENGTH}, of $10^9$ bytes. A statement whose result
+would exceed it should fail with the error \emph{string or blob too big}, which
+is SQLite error code~18. Rust aborts the process when an allocation fails and cannot be
+recovered, so a size check that runs after the allocation is not a check at all.
+
+\paragraph{Differential testing.} A \emph{differential oracle} runs one query on
+two engines and reports a disagreement. It needs no knowledge of the correct
+answer, but it needs a \emph{reference engine} that implements the same feature.
+Turso's fuzzer uses SQLite as its reference engine. SQLite has no \sql{lpad},
+\sql{rpad} or \sql{repeat}, so a disagreement on those functions cannot be
+judged.
+
+\paragraph{Crash oracle.} A \emph{crash oracle} reports a statement that ends the
+engine's process, panics, reports an internal error or does not answer within a
+time limit. It does not report a \emph{user error}, which is a statement the
+engine rejects with a normal message, such as a syntax error or a documented
+limit. A crash oracle needs no reference engine. It finds no wrong answer that
+leaves the process running.
+
+\paragraph{Bug reports as test material.} DuckDB maintainers add the label
+\emph{reproduced} to an issue once they have confirmed it. A fix usually adds a
+regression test that contains the query which triggered the issue. Such a query
+is small, it was chosen by someone who understood the defect, and it tends to sit
+in an awkward corner: an empty string, a multi-byte character, a value at the
+edge of a type.
+
+\paragraph{Literal and template.} We call a constant in a query, such as
+\sql{10} or \sql{'x'}, a \emph{literal}. A \emph{template} is a query in which
+every literal is replaced by a typed hole, such as \sql{\{n0\}} for an integer or
+\sql{\{s4\}} for a string. Filling the holes gives a new query with the same
+structure.
+
+\subsection{The Blind Spot of an Incumbent Fuzzer}
+\label{sec:problem}
+
+Let \Fz be the fuzzer that already tests an engine~$E$, and let \Rengine be the
+reference engine that \Fz compares against. We write \Voc for the set of SQL
+functions that \Fz can emit, and \Lit for the literals it can emit: a range of
+integers and a set of strings. We write \VocR for the functions that \Rengine
+implements.
+
+A statement $q$ is \emph{expressible} by \Fz if every function in $q$ is in \Voc
+and every literal in $q$ is in \Lit. A statement is \emph{judgeable} if every
+function in $q$ is in \VocR. The \emph{blind spot} of \Fz is
+\begin{equation}
+  \label{eq:blind}
+  \Blind = \{\, q \mid q \text{ is not expressible by } \Fz
+           \ \lor\ q \text{ is not judgeable against } \Rengine \,\}.
+\end{equation}
+\Fz never generates a statement outside its own vocabulary or literal domain,
+however long it runs. A statement that \Fz does generate but cannot judge is
+generated in vain. Both halves of~\eqref{eq:blind} are properties of the source
+code of \Fz and \Rengine, so \Blind can be measured before any test runs.
+
+\paragraph{Goal.} Find statements $q \in \Blind$ on which $E$ violates the crash
+oracle, without a reference engine, and with each finding regenerated from a
+recorded seed. We look for two things: which functions and values put a
+statement in \Blind, and where to get statements in that region that are likely
+to break $E$.
+
+\subsection{Why the Obvious Alternatives Fall Short}
+
+\paragraph{Why not widen the incumbent fuzzer instead?} Its maintainers could add
+\sql{lpad} to \Voc and \imax to \Lit, and the defects in this paper would then be
+within reach. But that needs someone to know which function and which value to
+add. The blind spot is large: any function outside \Voc and any value outside
+\Lit belongs to it. Bug reports from another engine point at the corners where
+someone has already been hurt. A crash oracle then removes the need for a
+reference engine, so a function SQLite lacks can still be tested.
+
+\paragraph{Why not run the other engine's tests directly?} A regression test was
+written for the other engine's defect. Its literal values are tuned to that
+defect, which the engine under test probably never had, and its syntax may not
+parse. The structure of the query, meaning which functions are nested how, is
+what carries over. The values have to be chosen again.

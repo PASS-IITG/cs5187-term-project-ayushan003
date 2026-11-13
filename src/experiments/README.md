@@ -1,7 +1,7 @@
 # Experiments
 
 Three experiments, each with its raw output committed next to this file. They
-back Table 2 of the report ([`paper/GRAFT-report.pdf`](../../paper/GRAFT-report.pdf), Section 5.6).
+back Table 2 of the report ([`paper/GRAFT-report.pdf`](../../paper/GRAFT-report.pdf), Section 4.6).
 All commands run from `src/`.
 
 | File | What it holds |

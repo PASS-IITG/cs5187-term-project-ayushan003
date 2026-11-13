@@ -9,12 +9,12 @@
 
 ## Anonymity and signing
 
-FSE reviews papers double-anonymously, so an FSE submission would leave out the
-authors' names. The course instead requires each member to justify their
-contribution through a signed statement in the report and through the commit
-history of this repository. The report (`GRAFT-report.pdf`, section *Author
-Contributions*) therefore names both authors and carries this statement for
-both to sign. That is its only departure from the FSE format.
+The report ([`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf)) follows FSE's
+double-anonymous review format: it carries no author names, affiliations or
+identifying links. Each member's contribution is therefore justified here, in
+this signed statement, and in the commit history of this repository. The
+report's *Author Contributions* section points to this file without naming
+anyone.
 
 ## How the work was carried out
 
