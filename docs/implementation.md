@@ -1,7 +1,7 @@
 # Implementation notes
 
 Details a reader needs in order to work on the code, or to judge whether the
-claims in `docs/evaluation.md` are supported by it. Only components that exist
+claims in the paper (`GRAFT-report.pdf`) are supported by it. Only components that exist
 in this repository are described.
 
 ---
@@ -72,7 +72,7 @@ record, the signature, the log format — are specified in
 | `graft/corpus/classify.py` | labels a subset by defect class and transferability. |
 | `graft/corpus/templates.py` | **the transfer mechanism.** `templatize` replaces literals with typed holes; `instantiate` fills them from boundary-weighted pools; `load_templates` reads the corpus and applies `configs/weights.yaml`. |
 | `graft/generate/capabilities.py` | probes the real binary; writes `configs/capabilities.yaml`. |
-| `graft/generate/{schema,data,expr,query}.py` | the typed generator: schema, rows, expressions, queries. One of the two case sources, and the one that reaches defect #4. |
+| `graft/generate/{schema,data,expr,query}.py` | the typed generator: schema, rows, expressions, queries. One of the two case sources. |
 | `graft/oracle/crash.py` | the only oracle. ~145 lines. |
 | `graft/triage/reduce.py` | shrink while preserving the violation; `sqlglot` where it parses, text where it does not. |
 | `graft/triage/verify.py` | re-run on a fresh process, then on current `main`. |

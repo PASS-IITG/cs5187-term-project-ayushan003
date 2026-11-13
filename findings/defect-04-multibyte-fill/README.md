@@ -66,25 +66,24 @@ An exact computation is required rather than an estimate: a conservative
 [`../patches/pr-11259.patch`](../patches/pr-11259.patch). The contemporaneous
 analysis is in [`analysis.md`](analysis.md).
 
-## Rediscovering it with the tool
+## How it was found, and why GRAFT does not reach it
 
-Against a pre-fix build, from a recorded seed, in one case:
+GRAFT did not find this defect. We noticed the unit mismatch while writing the
+patch for #1–#3, misjudged it as harmless, and Turso's automated reviewer showed
+it was harmful (below).
 
-```bash
-export GRAFT_TURSO_BIN=~/targets/turso-prefix/target/release/tursodb
-python -m graft.campaign --target turso --mode both --seed-start 5429 --max-cases 1
-```
+GRAFT cannot reach it with its current pools. The defect needs a length of at
+most 10⁹ characters, so the character check passes, whose result is more than
+10⁹ bytes: between 2.5 × 10⁸ and 10⁹ for a four-byte fill. The integer pools
+jump from 32,767 to 2,147,483,647. None of the 60,000 cases the three modes
+generate for seeds 0–19999 contains an integer in that range
+([`../../experiments/defect4-reach.json`](../../experiments/defect4-reach.json)),
+and rerunning all three arms on the build with only our first patch, which
+still has this defect, gives 0 hits
+([`../../experiments/ablation-patch1.json`](../../experiments/ablation-patch1.json)).
+The mined templates are further blocked because their string fills are ASCII.
 
-Signature `541c97fa5dd9`. The generator arm reaches it at seed 6376, with
-`lpad('1', 2147483647, '中文')` — 2.1 billion characters at three bytes each,
-which aborts the pre-fix build with `memory allocation of 4294967292 bytes
-failed`.
-
-**The mined-template arm never reaches it, and cannot.** Templating replaces a
-report's literals with typed holes, and the text fill pool is ASCII-only, so no
-instantiation can produce a multi-byte fill at any seed. The generator gets
-there through `EDGE_STRINGS`, which carries `é` and `中文`. That asymmetry is
-the clearest result in [`../../experiments/README.md`](../../experiments/README.md).
+Adding each engine's own limits to the boundary pools is future work.
 
 ## What we got wrong, and who caught it
 
@@ -98,7 +97,7 @@ input this pull request doesn't fix"*, showing it was permissive and supplying a
 demonstrating input. Our reply at `18:09Z`: *"you're right, and I've corrected
 the description. I had the direction backwards."*
 
-Ours: the defect, the root-cause analysis, the exact precheck, the verification,
-the merged patch. Not ours: judging the direction correctly at first. It is
+Ours: noticing the unit mismatch, the root-cause analysis, the exact precheck,
+the verification, the merged patch. Not ours: judging the direction correctly at first. It is
 recorded here because it is one click away on PR #11225, and a reader who finds
 it there should find it here first.

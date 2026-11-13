@@ -14,8 +14,12 @@ During development our own adapter once read an error message as a result row
   \item every seed in Table~\ref{tab:defects} was run again in a single case and
         reproduced the signature claimed.
 \end{itemize}
-What remains: each run in Table~\ref{tab:ablation} was done once. Seeds make a
-run repeatable on the same code, so the counts there are exact for that code.
+Attributing a hit to a defect is a second internal threat. We first mapped one
+signature to defect~4 by hand, and it was defect~1 reached another way
+(Section~\ref{sec:rq2}). Every attribution in this paper was therefore checked
+against the build that has only our first patch, which separates defect~4 from
+the other three. Each run in Table~\ref{tab:ablation} was done once. Seeds make
+a run repeatable on the same code, so the counts there are exact for that code.
 The first seed at which a source reaches a defect is one sample and not a rate.
 Timings come from one laptop and will differ elsewhere. The claims rest on exit
 status and error text, which do not vary between our runs.
@@ -36,7 +40,8 @@ sound lower bound: a generator cannot emit a function it does not name or a valu
 outside its configured range. It is not a proof that no other code path in the
 project reaches the same statement. We also count defects by signature. A
 signature is a hash of the error, so two causes can share one, as defects 1
-and~2 do. For that reason we decided the count by reading the code, not from
-signatures. The blind-spot argument itself was formed after the first defect was
-found, as an explanation of why it had survived. We present it as a hypothesis
-that the evidence supports, not as the reason the first defect was found.
+and~2 do, and one cause can have two, as defect~1 does. For that reason we
+decided the count by reading the code, not from signatures. The blind-spot
+argument itself was formed after the first defect was found, as an explanation
+of why it had survived. We present it as a hypothesis that the evidence
+supports, not as the reason the first defect was found.

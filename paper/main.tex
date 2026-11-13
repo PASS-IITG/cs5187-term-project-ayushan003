@@ -1,32 +1,28 @@
-%% FSE (CS-5187 Term Project) research paper. Requirements from the CFP (https://conf.researchr.org/home/fse-2026, checked 2026-09-30):
-%%   * \documentclass[acmsmall,screen,review]{acmart}; single column
-%%   * 12 pages of text and figures + references
-%%   * the FSE CFP asks for double-anonymous review; this course report keeps
-%%     author names because the course requires a signed contribution
-%%     statement in the report (course page, "Team and Accountability",
-%%     checked 2026-11-11). That is the only deviation from the template.
-%%   * "Data Availability" section after the Conclusion
-%%   * disclose AI tools; fabricated citations = desk reject
-%%   * deadline: paper and repository due Fri 13 Nov 2026, 23:59 IST (course page)
-%% Used for e.g. FSE, ISSTA, OOPSLA/PACMPL, TOSEM.
-\documentclass[acmsmall,screen,review]{acmart}
+%% CS-5187 term-project report in FSE format.
+%% Course requirements (course page, "Deliverables", checked 2026-11-13):
+%%   * ACM Primary Article Template, LaTeX `sigconf`, written in Overleaf
+%%   * sections: motivation, technique, implementation, evaluation,
+%%     related work, threats to validity
+%%   * a signed contribution statement in the report
+%%   * the PDF is submitted with the artifact
+%% FSE reviews double-anonymously, but this report names its authors because
+%% the course requires a signed contribution statement. The Author
+%% Contributions section (sections/contributions.tex) states this.
+\documentclass[sigconf]{acmart}
 
 \input{macros}
 
 \setcopyright{none}
-\acmConference[FSE (CS-5187 Term Project)]{ACM International Conference on the Foundations of Software Engineering (Format Template)}{2026}{IIT Guwahati}
+\acmConference[CS-5187 Term Project]{CS-5187 Software Analysis, Term Project, in the format of the ACM International Conference on the Foundations of Software Engineering (FSE)}{November 2026}{IIT Guwahati, India}
 \acmYear{2026}
 \acmDOI{}   % a course report has no DOI; acmart otherwise prints a placeholder
 \acmISBN{}
+\settopmatter{printacmref=false}
 \citestyle{acmauthoryear}
 
 \begin{document}
 
 \title[GRAFT]{GRAFT: Cross-Engine Bug-Report-Guided Fuzzing of a SQLite-Compatible Database}
-%% Title pattern: "Short Hook: Plain Description of What and For Whom".
-%% Alternative titles:
-%%   "Where the Fuzzer Cannot Reach: Testing a SQL Engine with Another Engine's Bug Reports"
-%%   "Borrowed Bugs: Finding Defects in Turso with DuckDB's Bug Reports"
 
 \author{Ayush Singh Chauhan}
 \affiliation{\institution{Indian Institute of Technology Guwahati}\city{Guwahati}\country{India}}
@@ -54,21 +50,20 @@
 \ccsdesc[500]{Software and its engineering~Software testing and debugging}
 \ccsdesc[300]{Information systems~Data management systems}
 
-\keywords{fuzzing, database testing, SQL, bug reports, test generation, crash oracle, recurring defects}
+\keywords{fuzzing, database testing, SQL, bug reports, test generation, crash oracle}
 
 \maketitle
 
 \input{sections/introduction}
-\input{sections/background}
-\input{sections/problem}
-\input{sections/approach}
+\input{sections/motivation}
+\input{sections/technique}
 \input{sections/implementation}
 \input{sections/evaluation}
-\input{sections/discussion}
-\input{sections/threats}
 \input{sections/related}
+\input{sections/threats}
 \input{sections/conclusion}
 \input{sections/data}
+\input{sections/contributions}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}

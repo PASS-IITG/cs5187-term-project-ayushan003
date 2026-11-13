@@ -1,7 +1,7 @@
 # GRAFT — see README.md
 PY ?= python3
 
-.PHONY: help reproduce test campaign probe corpus clean
+.PHONY: help reproduce test campaign probe smoke corpus clean
 
 help:
 	@echo "GRAFT targets:"

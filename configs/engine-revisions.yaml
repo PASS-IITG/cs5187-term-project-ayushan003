@@ -1,6 +1,6 @@
 # configs/engine-revisions.yaml - which Turso build is which, and what each is for.
 #
-# Three revisions matter to this project. They are three points in time, not a
+# Four revisions matter to this project. They are four points in time, not a
 # disagreement: a report that cites only one of them is ambiguous about whether
 # the defect was present.
 
@@ -20,6 +20,14 @@ turso:
       and the base of pull request #11225. Defect #4's cost was measured here
       (about 34 s and an 11.7 GB peak). This is the "before" binary: build it
       to reproduce either finding's original behaviour.
+
+  - commit: ec86571642a6
+    date: 2026-11-02
+    contains_our_fixes: first only
+    role: >
+      The merge of pull request #11225: defects #1-#3 are fixed and defect #4
+      is still present. Used to attribute each oracle hit, since a hit here
+      can only be defect #4 (experiments/ablation-patch1.json: 0 hits).
 
   - commit: 7f0a9e6f4
     date: 2026-11-02

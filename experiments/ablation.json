@@ -42,7 +42,7 @@
   "signature_to_defect": {
     "64513113c675": "defects 1 and 2 - lpad/rpad length allocated before validation",
     "40d2c580f251": "defect 3 - repeat size computation overflow",
-    "541c97fa5dd9": "defect 4 - character count checked against a byte limit"
+    "541c97fa5dd9": "defect 1 again - lpad with a length above 10^9 taken from table data; the first-patch build rejects it, so it is not defect 4 (see ablation-patch1.json)"
   },
   "note_on_vocabulary": "The generator's function vocabulary includes lpad, rpad and repeat. This measures the tool as it now stands."
 }

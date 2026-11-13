@@ -12,7 +12,9 @@ express. Turso's differential fuzzer draws integer literals from
 `lpad`/`rpad` at all — and SQLite, its reference oracle, has no `LPAD` to
 compare against.
 
-Four defects found, reported and fixed upstream across two merged pull requests.
+GRAFT found three defects; our patch for them exposed a fourth, which GRAFT did
+not find. All four were reported and fixed upstream across two merged pull
+requests.
 
 Summary->
 

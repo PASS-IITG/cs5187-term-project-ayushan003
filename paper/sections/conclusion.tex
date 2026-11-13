@@ -10,7 +10,10 @@ $10^6$, and SQLite has no \sql{lpad} to compare against.
 We presented \tool, which reads an incumbent fuzzer's source to find its blind
 spot. It fills that region with the shapes of another engine's bug reports and
 with typed generation. It judges results with an oracle that needs no reference
-engine. It found four previously unknown defects in Turso, all fixed upstream by
-our two merged patches, and it regenerates each from a recorded seed. At an equal
-budget of 20{,}000 cases the typed generator reached three distinct defects and
-the mined reports two, and drawing from both found the first defect at case 101.
+engine. It found three previously unknown defects in Turso and regenerates each
+from a recorded seed. Our patch for them exposed a fourth, which \tool did not
+find, and our two merged patches fix all four. At an equal budget of 20{,}000
+cases, mined reports and typed generation each reached both root causes of the
+three defects, and drawing from both found the first defect at case 101. The
+fourth defect shows the method's own blind spot: boundary pools built from
+machine-integer limits miss the limits an engine sets itself.

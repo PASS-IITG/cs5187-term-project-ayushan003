@@ -37,7 +37,7 @@
                     report.py    draft for a human to read and file
                            │
                            ▼
-                  findings/bug-0N/         reproduction, patch, upstream links
+                  findings/defect-0N-*/    reproduction, root cause, upstream links
 ```
 
 ## Components
@@ -51,10 +51,10 @@
 | `graft/oracle/` | 230 | the crash oracle and the violation type |
 | `graft/triage/` | 2,044 | reduction, re-verification, duplicate search, report drafting, upstream ledger |
 | `graft/campaign.py` | 453 | the seeded campaign loop, over either case source |
-| `graft/reproduce.py` | 267 | the one-command replay of the headline result |
+| `graft/reproduce.py` | 263 | the one-command replay of the headline result |
 | `tests/` | 5,041 | 514 tests |
 
-Total: **10,038 lines** of implementation, 5,041 of tests, 514 tests.
+Total: **10,034 lines** of implementation, 5,041 of tests, 514 tests.
 
 ## Design decisions, and what each one costs
 
@@ -79,12 +79,12 @@ lesson generalises: with a text protocol, a diagnostic can arrive anywhere.
 
 ### Literals only in templates
 
-Covered in `docs/methodology.md` §3. Validity by construction, at the cost of
+Described in the paper, Section 3.2. Validity by construction, at the cost of
 never exploring a structure no upstream report exhibits.
 
 ### One oracle
 
-Covered in `docs/methodology.md` §5. No reference implementation needed, no
+Described in the paper, Section 3.3. No reference implementation needed, no
 dialect false positives, a structurally zero false-positive rate — and complete
 blindness to a wrong answer that does not crash.
 
@@ -111,13 +111,14 @@ achieved type coverage.
 
 ### Engine revisions are pinned, with roles
 
-Three Turso revisions matter and they are not interchangeable
+Four Turso revisions matter and they are not interchangeable
 (`configs/engine-revisions.yaml`):
 
 | commit | contains our fixes | role |
 |---|---|---|
 | `730017f96` | no | the revision the discovery campaign ran against |
 | `b588fbdc6` | no | re-verification before filing; the pull-request base; the **"before"** binary |
+| `ec86571642a6` | the first only | merge of PR #11225; defects 1–3 fixed, defect 4 present; used to attribute each hit |
 | `7f0a9e6f4` | **yes** | contains both merged fixes; the **"after"** binary |
 
 A before/after demonstration needs two builds from the same source tree
@@ -131,6 +132,6 @@ did not obtain.
 |---|---|
 | Differential or metamorphic oracles | No defect here needed one, and SQLite — the only sane reference for a SQLite-compatible engine — has no `lpad`, so a differential oracle is blind to all four by construction. |
 | Any engine but Turso at run time | GRAFT tests one engine. DuckDB is a corpus source and is never executed. |
-| Coverage-guided feedback | Not implemented. `configs/weights.yaml` is a static, hand-set bias, not a feedback loop. Limitation 8 in `docs/evaluation.md` §6. |
-| Grammar learning | Not implemented. See the FDLoop entry in `docs/related-work.md` for what the principled version would be. |
+| Coverage-guided feedback | Not implemented. `configs/weights.yaml` is a static, hand-set bias, not a feedback loop. |
+| Grammar learning | Not implemented. |
 | Any language-model call | Nothing in the pipeline calls one. |

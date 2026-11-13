@@ -7,13 +7,13 @@ in Rust, runs such a fuzzer in continuous integration, yet the single statement
 We present \tool. It takes the shape of bug reports filed against a different
 engine, DuckDB, refills their literals with boundary values, and runs them
 against Turso together with a typed SQL generator. Its only oracle needs no
-reference engine: one statement must not end the process. \tool found four
-previously unknown defects in Turso's string functions, and our two patches that
-fix all four were merged upstream. Each defect aborts the engine from one
-statement, and the tool regenerates each one from a recorded seed. None of
-Turso's own fuzzers can express any of the four, since \sql{lpad},
-\sql{rpad} and \sql{repeat} are absent from all of them. At an equal budget of
-20{,}000 cases, the typed generator reached three distinct defects and the mined
-reports reached two. Running both sources together found the first defect at
-case 101. The work taught us that reading an incumbent fuzzer's source is a cheap
-and reliable way to decide where to test next.
+reference engine: one statement must not end the process. \tool found three
+previously unknown defects in Turso's \sql{lpad}, \sql{rpad} and \sql{repeat}
+functions. Each aborts the engine from one statement, and \tool regenerates each
+from a recorded seed. Our patch for them exposed a fourth defect in the same
+length check, which \tool did not find. Our two patches, which fix all four,
+were merged upstream. None of Turso's own fuzzers can express any of the four,
+since the three functions are absent from all of them. At an equal budget of
+20{,}000 cases, mined reports and typed generation each reached both root causes
+of the three defects, and drawing from both sources found the first defect at
+case 101.

@@ -7,14 +7,23 @@
 | Ayush Singh Chauhan | 240101117 |
 | Mehul Raj | 240101125 |
 
+## Anonymity and signing
+
+FSE reviews papers double-anonymously, so an FSE submission would leave out the
+authors' names. The course instead requires each member to justify their
+contribution through a signed statement in the report and through the commit
+history of this repository. The report (`GRAFT-report.pdf`, section *Author
+Contributions*) therefore names both authors and carries this statement for
+both to sign. That is its only departure from the FSE format.
+
 ## How the work was carried out
 
 This project was built in shared working sessions. Both members were present for
 the design, the implementation, the campaigns, the triage of every candidate and
 the preparation of both upstream patches. We worked from whichever of our two
 machines was in use at the time, so a commit's author field records **which
-machine a session ran on**, not which of us did the work. Commits therefore
-carry a `Co-authored-by` trailer.
+machine a session ran on**, not which of us did the work. Most commits made
+from Ayush's account therefore carry a `Co-authored-by` trailer naming Mehul.
 
 Both upstream pull requests were submitted from Ayush's GitHub account, which is
 why both show that handle on github.com. The patches themselves were written and
@@ -61,7 +70,7 @@ the first implementation — and was reviewed, debugged and extended by the othe
   search with its queries recorded, and report drafting (`graft/triage/`).
 - **Evaluation.** The blind-spot measurement against Turso's own fuzzer
   configuration, the before/after capture on the pre-fix and post-fix builds, and
-  the reproducibility checks (`docs/evaluation.md`, `graft/reproduce.py`).
+  the reproducibility checks (`experiments/`, `graft/reproduce.py`).
 
 ### Joint
 
@@ -82,8 +91,11 @@ written down, and both of us understand and can defend the whole of it.
 ## Signatures
 
 By signing below, each member confirms that the division above is accurate and
-that they can explain and defend any part of this project.
+that they can explain and defend any part of this project. The same statement,
+with space for both signatures, is in the report's *Author Contributions*
+section.
 
-Ayush Singh Chauhan (240101117)
-
-Mehul Raj (240101125)
+| Member | Signature | Date |
+|---|---|---|
+| Ayush Singh Chauhan (240101117) | | |
+| Mehul Raj (240101125) | | |

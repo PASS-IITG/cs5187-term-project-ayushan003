@@ -1,22 +1,22 @@
-\section{Approach}
-\label{sec:approach}
+\section{Technique}
+\label{sec:technique}
 
-Figure~\ref{fig:overview} shows the steps of \tool. The main idea is to aim
+Figure~\ref{fig:overview} shows the workflow of \tool. The main idea is to aim
 testing at the blind spot of the incumbent fuzzer, and to take the statements
 that reach it from bug reports another engine's maintainers have already
 reduced. Two kinds of input go in: the incumbent fuzzer's source, and a bug
 tracker. One kind comes out: a statement that ends the engine's process, with the
 seed that regenerates it. Step~3 loops over seeds and is the only expensive step.
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
   \input{figures/overview}
-  \caption{Overview of \tool. Step~1 runs once and tells Step~3 where to aim.
+  \caption{Workflow of \tool. Step~1 runs once and tells Step~3 where to aim.
   Steps~2 and~3 supply two sources of statements, mined templates and a typed
   generator. Step~3 loops over seeds and is the only step whose cost grows with
   the budget; a crash goes to Step~4.}
   \label{fig:overview}
-\end{figure}
+\end{figure*}
 
 \subsection{Step 1: Measure the Blind Spot}
 \label{sec:step-blind}
@@ -54,22 +54,24 @@ a structure that no report contains.
 \label{sec:step-run}
 \tool fills each hole from a pool weighted toward the edges of each type. For
 integers the pool holds zero, $\pm 1$, the limits of 8-, 16- and 32-bit integers,
-and the limits of 64-bit integers, including \imax. Every random choice comes
-from a generator seeded per case, and the seed is stored with each result.
+and the limits of 64-bit integers, including \imax. String holes are filled from
+a pool of short ASCII strings. Every random choice comes from a generator seeded
+per case, and the seed is stored with each result.
 
 Mined templates are one source of statements. The second is a typed SQL generator
 that builds a schema, inserts rows, and composes expressions and queries. It
 emits only features that the target engine accepted when \tool probed it, so it
-rarely wastes a case on syntax the engine rejects. Its string pool includes
+rarely wastes a case on syntax the engine rejects. Its string pool also includes
 multi-byte values such as \sql{'é'} and three-byte Chinese characters. A command
 line flag selects either source or both.
 
 Each case, meaning its setup statements and its query, runs in a fresh
-\texttt{tursodb} process under a time limit and a memory limit. The crash oracle classifies the outcome into one of six classes
-(\emph{none}, \emph{user error}, \emph{internal error}, \emph{panic},
-\emph{crash}, \emph{timeout}) and reports only the last four. We do not claim the
-crash oracle as new; fuzzers have used it for decades. We chose it because it is
-the one oracle that can judge a function the reference engine lacks.
+\texttt{tursodb} process under a time limit and a memory limit. The crash oracle
+classifies the outcome into one of six classes (\emph{none}, \emph{user error},
+\emph{internal error}, \emph{panic}, \emph{crash}, \emph{timeout}) and reports
+only the last four. We do not claim the crash oracle as new; fuzzers have used it
+for decades. We chose it because it is the one oracle that can judge a function
+the reference engine lacks.
 
 \subsection{Step 4: Reduce, Re-check and Report}
 \label{sec:step-triage}
