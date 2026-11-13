@@ -1,0 +1,27 @@
+\subsection{Problem Definition: The Blind Spot of an Incumbent Fuzzer}
+\label{sec:problem}
+
+Let \Fz be the fuzzer that already tests an engine~$E$, and let \Rengine be the
+reference engine that \Fz compares against. We write \Voc for the set of SQL
+functions that \Fz can emit, and \Lit for the literals it can emit: a range of
+integers and a set of strings. We write \VocR for the functions that \Rengine
+implements.
+
+A statement $q$ is \emph{expressible} by \Fz if every function in $q$ is in \Voc
+and every literal in $q$ is in \Lit. A statement is \emph{judgeable} if every
+function in $q$ is in \VocR. The \emph{blind spot} of \Fz is
+\begin{equation}
+  \label{eq:blind}
+  \Blind = \{\, q \mid q \text{ is not expressible by } \Fz
+           \ \lor\ q \text{ is not judgeable against } \Rengine \,\}.
+\end{equation}
+\Fz never generates a statement outside its own vocabulary or literal domain,
+however long it runs. A statement that \Fz does generate but cannot judge is
+generated in vain. Both halves of~\eqref{eq:blind} are properties of the source
+code of \Fz and \Rengine, so \Blind can be measured before any test runs.
+
+\paragraph{Goal.} Find statements $q \in \Blind$ on which $E$ violates the crash
+oracle, without a reference engine, and with each finding regenerated from a
+recorded seed. We look for two things: which functions and values put a
+statement in \Blind, and where to get statements in that region that are likely
+to break $E$.

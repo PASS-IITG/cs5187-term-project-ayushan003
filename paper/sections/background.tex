@@ -1,0 +1,37 @@
+\subsection{Background}
+\label{sec:background}
+
+\paragraph{Turso.} Turso~\cite{turso} reimplements SQLite in Rust and aims to
+accept the same SQL. Its shell, \texttt{tursodb}, reads statements on standard
+input. Text and blob results are bounded by a constant,
+\texttt{Value::MAX\_BLOB\_LENGTH}, of $10^9$ bytes. A statement whose result
+would exceed it should fail with the error \emph{string or blob too big}, which
+is SQLite error code~18. Rust aborts the process when an allocation fails and cannot be
+recovered, so a size check that runs after the allocation is not a check at all.
+
+\paragraph{Differential testing.} A \emph{differential oracle} runs one query on
+two engines and reports a disagreement. It needs no knowledge of the correct
+answer, but it needs a \emph{reference engine} that implements the same feature.
+Turso's fuzzer uses SQLite as its reference engine. SQLite has no \sql{lpad},
+\sql{rpad} or \sql{repeat}, so a disagreement on those functions cannot be
+judged.
+
+\paragraph{Crash oracle.} A \emph{crash oracle} reports a statement that ends the
+engine's process, panics, reports an internal error or does not answer within a
+time limit. It does not report a \emph{user error}, which is a statement the
+engine rejects with a normal message, such as a syntax error or a documented
+limit. A crash oracle needs no reference engine. It finds no wrong answer that
+leaves the process running.
+
+\paragraph{Bug reports as test material.} DuckDB maintainers add the label
+\emph{reproduced} to an issue once they have confirmed it. A fix usually adds a
+regression test that contains the query which triggered the issue. Such a query
+is small, it was chosen by someone who understood the defect, and it tends to sit
+in an awkward corner: an empty string, a multi-byte character, a value at the
+edge of a type.
+
+\paragraph{Literal and template.} We call a constant in a query, such as
+\sql{10} or \sql{'x'}, a \emph{literal}. A \emph{template} is a query in which
+every literal is replaced by a typed hole, such as \sql{\{n0\}} for an integer or
+\sql{\{s4\}} for a string. Filling the holes gives a new query with the same
+structure.

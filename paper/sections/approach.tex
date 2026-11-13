@@ -1,6 +1,17 @@
 \section{Technique}
 \label{sec:technique}
 
+This section first gives the background the paper needs
+(Section~\ref{sec:background}) and defines the problem
+(Section~\ref{sec:problem}). It then describes the workflow of \tool and its
+four steps.
+
+\input{sections/background}
+\input{sections/problem}
+
+\subsection{Workflow}
+\label{sec:workflow}
+
 Figure~\ref{fig:overview} shows the workflow of \tool. The main idea is to aim
 testing at the blind spot of the incumbent fuzzer, and to take the statements
 that reach it from bug reports another engine's maintainers have already
@@ -8,7 +19,7 @@ reduced. Two kinds of input go in: the incumbent fuzzer's source, and a bug
 tracker. One kind comes out: a statement that ends the engine's process, with the
 seed that regenerates it. Step~3 loops over seeds and is the only expensive step.
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
   \input{figures/overview}
   \caption{Workflow of \tool. Step~1 runs once and tells Step~3 where to aim.
@@ -16,7 +27,7 @@ seed that regenerates it. Step~3 loops over seeds and is the only expensive step
   generator. Step~3 loops over seeds and is the only step whose cost grows with
   the budget; a crash goes to Step~4.}
   \label{fig:overview}
-\end{figure*}
+\end{figure}
 
 \subsection{Step 1: Measure the Blind Spot}
 \label{sec:step-blind}

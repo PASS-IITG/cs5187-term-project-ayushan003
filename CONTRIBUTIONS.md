@@ -13,8 +13,7 @@ The report ([`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf)) follows FSE's
 double-anonymous review format: it carries no author names, affiliations or
 identifying links. Each member's contribution is therefore justified here, in
 this signed statement, and in the commit history of this repository. The
-report's *Author Contributions* section points to this file without naming
-anyone.
+report itself has no contribution section and does not refer to this file.
 
 ## How the work was carried out
 

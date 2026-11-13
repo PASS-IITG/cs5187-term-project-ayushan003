@@ -19,7 +19,7 @@ our fix, all four are fixed in Turso by two merged pull requests.
 | **Defects fixed upstream** | 4, through 2 issues and 2 merged pull requests |
 | **Headline reproduction** | `make reproduce` |
 | **Test suite** | 514 tests |
-| **Report** | [`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) (FSE format, ACM `sigconf`) |
+| **Report** | [`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) (FSE format, ACM `acmsmall`, anonymous) |
 
 ## Why GRAFT
 
@@ -202,14 +202,16 @@ for each experiment are in [`src/experiments/README.md`](src/experiments/README.
 
 ```
 .
-├── paper/                       the report
-│   ├── GRAFT-report.pdf         the report (FSE format, ACM sigconf, anonymous)
-│   └── paper-artifacts/         the complete LaTeX project
-│       ├── main.tex, macros.tex, references.bib
-│       ├── sections/, figures/  one file per section; the workflow figure
-│       ├── Makefile, scripts/   build, submission checks
-│       ├── paper.conf, .gitignore
-│       └── overleaf.zip         the same sources, ready to import into Overleaf
+├── paper/                       the report, in the course template's layout
+│   ├── GRAFT-report.pdf         the report (FSE format, ACM acmsmall, anonymous)
+│   ├── main.tex, macros.tex, references.bib
+│   ├── sections/, figures/      one file per section; the workflow figure
+│   ├── tables/, data/           template example table; note on data sources
+│   ├── Makefile, scripts/       build; pre-submission checks (make check)
+│   ├── paper.conf               page limit used by make check
+│   ├── STYLE.md, CHECKLIST.md   the template's writing rules and checklist
+│   ├── HANDOFF.md               every number in the paper and its source
+│   └── overleaf.zip             the same sources, ready to import into Overleaf
 ├── src/                         the code
 │   ├── graft/                   the tool
 │   │   ├── engines/             tursodb adapter and a planted-defect test engine
@@ -235,23 +237,22 @@ for each experiment are in [`src/experiments/README.md`](src/experiments/README.
 ## Report
 
 [`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) is the full report in FSE
-format, written in the ACM Primary Article Template (`acmart`, `sigconf`) and
+format, written in the course's LaTeX template: the ACM Primary Article
+Template (`acmart`) with `acmsmall,screen,review,anonymous`, single column,
 prepared for double-anonymous review. Its sections are Motivation, Technique,
 Implementation, Evaluation, Related Work and Threats to Validity, followed by
-the Conclusion, Data Availability, Use of Generative AI and Author
-Contributions.
+the Conclusion, Data Availability and Use of Generative AI.
 
-The complete LaTeX project is in
-[`paper/paper-artifacts/`](paper/paper-artifacts/), and
-[`overleaf.zip`](paper/paper-artifacts/overleaf.zip) holds the same sources for
-import into Overleaf (*New Project → Upload Project*). To build locally with a
-TeX Live that includes `acmart`:
+The LaTeX sources are in [`paper/`](paper/), and
+[`paper/overleaf.zip`](paper/overleaf.zip) holds the same sources for import
+into Overleaf (*New Project → Upload Project*). To build locally with a TeX
+Live that includes `acmart`:
 
 ```bash
-cd paper/paper-artifacts
-make report     # builds main.pdf and copies it to ../GRAFT-report.pdf
-make check      # submission checks: errors, citations, page count
-make overleaf   # rebuilds overleaf.zip from the current sources
+cd paper
+make                        # builds paper/main.pdf
+make check                  # checks for TODOs, banned words, undefined refs, page limit
+cp main.pdf GRAFT-report.pdf
 ```
 
 ## License

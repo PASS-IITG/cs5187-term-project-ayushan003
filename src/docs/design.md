@@ -79,12 +79,12 @@ lesson generalises: with a text protocol, a diagnostic can arrive anywhere.
 
 ### Literals only in templates
 
-Described in the paper, Section 2.2. Validity by construction, at the cost of
+Described in the paper, Section 2.5 (Step 2). Validity by construction, at the cost of
 never exploring a structure no upstream report exhibits.
 
 ### One oracle
 
-Described in the paper, Section 2.3. No reference implementation needed, no
+Described in the paper, Section 2.6 (Step 3). No reference implementation needed, no
 dialect false positives, a structurally zero false-positive rate — and complete
 blindness to a wrong answer that does not crash.
 

@@ -72,7 +72,7 @@ done once; Section~\ref{sec:threats} discusses what that allows us to claim.
 \subsection{\rqref{1}: Does \tool Find New Defects?}
 \label{sec:rq1}
 
-\begin{table*}[t]
+\begin{table}[t]
   \caption{The four defects, each run as one statement in a fresh process.
   \emph{Before}: Turso b588fbdc6, which has none of our patches.
   \emph{After}: 7f0a9e6f4, which has both. Exit status 134 is SIGABRT.
@@ -93,7 +93,7 @@ done once; Section~\ref{sec:threats} discusses what that allows us to claim.
     4 & \sql{lpad}   & counts characters, limit is bytes & 134, 3.96\,s & 1, 0.02\,s & review of our patch & -- \\
     \bottomrule
   \end{tabular}
-\end{table*}
+\end{table}
 
 Table~\ref{tab:defects} lists the defects. Defects 1 to 3 share a cause:
 \sql{lpad}, \sql{rpad} and \sql{repeat} sized their result from the caller's
@@ -137,29 +137,29 @@ defect names.
 \subsection{\rqref{2}: Mined Templates versus Typed Generation}
 \label{sec:rq2}
 
-\begin{table*}[t]
+\begin{table}[t]
   \caption{Each source of statements at an equal budget of 20{,}000 cases and
   seeds 0 to 19{,}999. \emph{Valid}: share of executed cases the engine
   accepted. \emph{Hits}: oracle violations on the pre-fix build. \emph{Distinct}:
-  distinct signatures, since eight hits on one signature are one defect found
+  distinct signatures, the unit of comparison, since eight hits on one signature are one defect found
   eight times. The next three columns give the first seed that reached each
   signature, or a dash if none did. Defects 1 and 2 share a signature; in all
-  three runs its first hit was an \sql{rpad} call. The third signature is
-  defect~1 again, reached with a length above $10^9$ computed from table data.
+  three runs its first hit was an \sql{rpad} call. The third signature,
+  \emph{Defect 1 again}, is defect~1 reached with a length above $10^9$ computed from table data.
   \emph{After patch 1}: hits when the same run is repeated on ec86571642a6, the
   build with only our first patch.}
   \label{tab:ablation}
   \footnotesize
   \begin{tabular}{@{}lrrrrrrrr@{}}
     \toprule
-    Source & Executed & Valid & Hits & Distinct & Defects 1, 2 & Defect 3 & Defect 1, second signature & After patch 1 \\
+    Source & Executed & Valid & Hits & Distinct & Defects 1, 2 & Defect 3 & Defect 1 again & After patch 1 \\
     \midrule
     Mined only     & 19{,}169 &  8.9\% &  8 & 2 & 914 & 10{,}180 & --       & 0 \\
     Generated only & 20{,}000 & 98.3\% & 12 & 3 & 762 & 5{,}367  & 6{,}376  & 0 \\
     Both           & 19{,}759 & 71.1\% & 15 & 3 & 101 & 5{,}080  & 5{,}429  & 0 \\
     \bottomrule
   \end{tabular}
-\end{table*}
+\end{table}
 
 Table~\ref{tab:ablation} gives the result. Both sources reached both root causes
 of defects 1 to 3: the shared \texttt{pad()} body and \sql{repeat}. The generator
@@ -200,21 +200,21 @@ and 914 for each source alone, and recorded 15 hits against 12 and 8.
 
 \begin{table}[t]
   \caption{Why Turso's own fuzzers cannot find the four defects, measured on the
-  source at b588fbdc6~\cite{tursofuzzer}. \emph{Voc.}: the function is among the
+  source at b588fbdc6~\cite{tursofuzzer}. \emph{In vocabulary}: the function is among the
   47 scalar functions of the differential fuzzer, or among those its four
-  libFuzzer targets call. \emph{Dom.}: the defect's literal lies in the fuzzer's
-  integer range $[-10^6, 10^6]$ or its alphanumeric string set. \emph{Judge}:
+  libFuzzer targets call. \emph{Literal in domain}: the defect's literal lies in the fuzzer's
+  integer range $[-10^6, 10^6]$ or its alphanumeric string set. \emph{Judgeable}:
   SQLite implements the function.}
   \label{tab:blind}
   \footnotesize
   \begin{tabular}{@{}rllccc@{}}
     \toprule
-     & Function & Literal the defect needs & Voc. & Dom. & Judge \\
+     & Function & Literal the defect needs & In vocabulary & Literal in domain & Judgeable \\
     \midrule
     1 & \sql{lpad}   & integer $9.2\times10^{18}$ & \xmark & \xmark & \xmark \\
     2 & \sql{rpad}   & integer $9.2\times10^{18}$ & \xmark & \xmark & \xmark \\
     3 & \sql{repeat} & integer $9.2\times10^{18}$ & \xmark & \xmark & \xmark \\
-    4 & \sql{lpad}   & multi-byte fill character  & \xmark & \xmark & \xmark \\
+    4 & \sql{lpad}   & a multi-byte fill character  & \xmark & \xmark & \xmark \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -241,14 +241,16 @@ would not have found them.
 \label{sec:rq4}
 
 \begin{table}[t]
-  \caption{Cost of each run on the pre-fix build in Table~\ref{tab:ablation}.
+  \caption{Cost of each 20{,}000-case run in Table~\ref{tab:ablation}, on the
+  pre-fix build and the laptop described in the setup.
   \emph{Time}: wall-clock seconds for the whole run. \emph{Rate}: cases executed
-  per second. \emph{First}: the case number of the first oracle hit.}
+  per second. \emph{First defect}: the case number of the first oracle hit; the run that draws
+  from both sources is the slowest per case and the fastest to its first defect.}
   \label{tab:cost}
   \footnotesize
   \begin{tabular}{@{}lrrr@{}}
     \toprule
-    Source & Time (s) & Rate (cases/s) & First \\
+    Source & Time (s) & Rate (cases/s) & First defect (case) \\
     \midrule
     Mined only     & 378.0 & 50.7 & 914 \\
     Generated only & 388.8 & 51.4 & 762 \\
@@ -271,47 +273,3 @@ statement in five executions.
 One run of 20{,}000 cases took under eight minutes on a laptop. With both sources,
 the first defect appeared at case 101, about two seconds into the run.
 \end{observation}
-
-\subsection{Discussion}
-\label{sec:discussion}
-
-\paragraph{Is mining bug reports better than generating SQL?} Not on this
-target. At the same budget both sources reached the same two root causes
-(Observation~\ref{obs:gen}). Mining did two things the generator did not. It
-found defects~1 and~3 first in time, before the generator's vocabulary contained
-\sql{lpad} or \sql{repeat}; we added those functions to the generator only after
-the defects were filed. And it pointed the work at pad functions in the first
-place. The fair reading is that each source covers a weakness of the other, which
-is why drawing from both
-reached a defect soonest (Observation~\ref{obs:both}).
-
-\paragraph{Are the defects in one family really four?} They are four ways for a
-user to end the process, each from a different statement, so we count them as
-four. They are not four independent mistakes: defects 1 and 2 share one
-function body, and defects 1 to 3 share one cause and one patch. Upstream records
-them as two issues and two pull requests. We report both counts and say which is
-which, so that neither inflates the other.
-
-\paragraph{Would more fuzzing time have found them?} No.
-Observation~\ref{obs:blind} is a property of the fuzzer's source, not of its
-budget. A generator cannot emit a function outside its vocabulary or a value
-outside its domain however long it runs. This is the main practical point of the
-paper: the incumbent fuzzer's run time tells nothing about how close it is to
-these defects. The same holds for \tool and defect~4:
-its pools contain no length in the range that defect needs.
-
-\paragraph{Why did fixing three defects reveal a fourth?} Before the first patch,
-the length check ran after the allocation, so its unit did not matter: the
-process died first. Once the check ran first, its unit became the thing that
-decided the outcome. A
-patch is a good place to look for the next defect, since it marks code where the
-authors' first understanding was wrong. Our own first understanding of defect~4
-was wrong too, and a reviewer corrected it.
-
-\paragraph{Does this work on other engines?} We do not know. The method needs a
-second engine with many closed, labelled reports that carry reproductions, and
-an engine under test that shares enough of its dialect for some reports to run.
-Only 16 of 60 reports that we classified by hand looked transferable to another
-engine. Testing other pairs of engines, filling string holes with multi-byte
-values, and adding each engine's own limits to the boundary pools we leave for
-future work.

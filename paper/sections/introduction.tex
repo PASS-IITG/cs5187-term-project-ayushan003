@@ -21,14 +21,17 @@ two boundaries. Such defects are silent in a specific way: a fuzzer can run for
 a year without reaching them, and the time it has already run says nothing about
 how close it is.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \begin{lstlisting}[escapechar=@]
 -- (a) Regression test added by the fix for DuckDB issue #27846
-select LPAD('x', 10, '0'), LPAD('x', 4, '@\textcolor{black}{\ding{72}}@'), LPAD('x', 3, '@\textcolor{black}{\ding{72}}@ab'), RPAD('x', 3, '@\textcolor{black}{\ding{72}}@ab')
+select LPAD('x', 10, '0'), LPAD('x', 4, '@\textcolor{black}{\ding{72}}@'),
+       LPAD('x', 3, '@\textcolor{black}{\ding{72}}@ab'), RPAD('x', 3, '@\textcolor{black}{\ding{72}}@ab')
 -- (b) The same shape with every literal replaced by a typed hole
-select LPAD({s4}, {n0}, {s5}), LPAD({s6}, {n1}, {s7}), LPAD({s8}, {n2}, {s9}), RPAD({s10}, {n3}, {s11})
+select LPAD({s4}, {n0}, {s5}), LPAD({s6}, {n1}, {s7}),
+       LPAD({s8}, {n2}, {s9}), RPAD({s10}, {n3}, {s11})
 -- (c) Filled from a boundary pool at seed 0, then run on Turso b588fbdc6
-select LPAD('', -9223372036854775808, 'abc'), LPAD('_', -128, '%'), LPAD('0', 9223372036854775807, 'abc'), RPAD('%', -128, 'ABC')
+select LPAD('', -9223372036854775808, 'abc'), LPAD('_', -128, '%'),
+       LPAD('0', 9223372036854775807, 'abc'), RPAD('%', -128, 'ABC')
 -- (d) Reduced to one statement
 select LPAD('a', 9223372036854775807, 'b');
 @\textit{memory allocation of 9223372036854775806 bytes failed}@      @$\leftarrow$ process aborts, exit status 134@
@@ -39,7 +42,7 @@ statement~(d). The marker \ding{72} stands for a four-byte emoji in the original
 test. Turso's own fuzzers cannot produce~(d): their 47-function vocabulary has
 no \sql{lpad}, and their integers stop at 1{,}000{,}000.}
 \label{fig:motivating}
-\end{figure*}
+\end{figure}
 
 Figure~\ref{fig:motivating} shows a real case. Turso~\cite{turso} is a
 SQLite-compatible engine written in Rust. It runs its own differential fuzzer in
@@ -50,9 +53,10 @@ have returned the engine's own error \emph{string or blob too big}. Turso's
 fuzzer could never have produced it. Its vocabulary of 47 scalar functions does
 not contain \sql{lpad}, and it draws integer literals only from
 $[-1{,}000{,}000,\ 1{,}000{,}000]$~\cite{tursofuzzer}. Even if it had produced
-the statement, SQLite has no \sql{lpad} to compare the answer against. None of
-Turso's four libFuzzer targets or its differential fuzzer calls \sql{lpad},
-\sql{rpad} or \sql{repeat}.
+the statement, SQLite has no \sql{lpad} to compare the answer against. This is
+not a single case: \tool found three such defects, and none of
+Turso's four libFuzzer targets or its differential fuzzer calls any of the three
+functions involved.
 
 The closest prior work either chooses where to look from the grammar or reuses
 known defects through static analysis. SQLBull starts generation from grammar
@@ -87,7 +91,7 @@ mined reports and the typed generator each reached both root causes of the
 three defects. The lesson we draw is a practical one: before spending compute on
 a fuzzer, spend an hour reading the fuzzer that is already there.
 
-\paragraph{Research contributions.}
+\paragraph{Contributions.}
 \begin{itemize}
   \item We define the \emph{blind spot} of an incumbent fuzzer and show that it
         can be measured from that fuzzer's source (Section~\ref{sec:problem}).
@@ -99,87 +103,23 @@ a fuzzer, spend an hour reading the fuzzer that is already there.
         four are fixed upstream by our merged patches (Section~\ref{sec:rq1}).
   \item We measure what each input source contributes at an equal budget, and
         release the tool, the corpus and all data
-        (Sections~\ref{sec:rq2} and~\ref{sec:data}).
+        (Section~\ref{sec:rq2} and the Data Availability statement).
 \end{itemize}
 
-The rest of this section gives the background the paper needs
-(Section~\ref{sec:background}), states the problem precisely
-(Section~\ref{sec:problem}), and explains why the obvious alternatives do not
-solve it.
-
-\subsection{Background}
-\label{sec:background}
-
-\paragraph{Turso.} Turso~\cite{turso} reimplements SQLite in Rust and aims to
-accept the same SQL. Its shell, \texttt{tursodb}, reads statements on standard
-input. Text and blob results are bounded by a constant,
-\texttt{Value::MAX\_BLOB\_LENGTH}, of $10^9$ bytes. A statement whose result
-would exceed it should fail with the error \emph{string or blob too big}, which
-is SQLite error code~18. Rust aborts the process when an allocation fails and cannot be
-recovered, so a size check that runs after the allocation is not a check at all.
-
-\paragraph{Differential testing.} A \emph{differential oracle} runs one query on
-two engines and reports a disagreement. It needs no knowledge of the correct
-answer, but it needs a \emph{reference engine} that implements the same feature.
-Turso's fuzzer uses SQLite as its reference engine. SQLite has no \sql{lpad},
-\sql{rpad} or \sql{repeat}, so a disagreement on those functions cannot be
-judged.
-
-\paragraph{Crash oracle.} A \emph{crash oracle} reports a statement that ends the
-engine's process, panics, reports an internal error or does not answer within a
-time limit. It does not report a \emph{user error}, which is a statement the
-engine rejects with a normal message, such as a syntax error or a documented
-limit. A crash oracle needs no reference engine. It finds no wrong answer that
-leaves the process running.
-
-\paragraph{Bug reports as test material.} DuckDB maintainers add the label
-\emph{reproduced} to an issue once they have confirmed it. A fix usually adds a
-regression test that contains the query which triggered the issue. Such a query
-is small, it was chosen by someone who understood the defect, and it tends to sit
-in an awkward corner: an empty string, a multi-byte character, a value at the
-edge of a type.
-
-\paragraph{Literal and template.} We call a constant in a query, such as
-\sql{10} or \sql{'x'}, a \emph{literal}. A \emph{template} is a query in which
-every literal is replaced by a typed hole, such as \sql{\{n0\}} for an integer or
-\sql{\{s4\}} for a string. Filling the holes gives a new query with the same
-structure.
-
-\subsection{The Blind Spot of an Incumbent Fuzzer}
-\label{sec:problem}
-
-Let \Fz be the fuzzer that already tests an engine~$E$, and let \Rengine be the
-reference engine that \Fz compares against. We write \Voc for the set of SQL
-functions that \Fz can emit, and \Lit for the literals it can emit: a range of
-integers and a set of strings. We write \VocR for the functions that \Rengine
-implements.
-
-A statement $q$ is \emph{expressible} by \Fz if every function in $q$ is in \Voc
-and every literal in $q$ is in \Lit. A statement is \emph{judgeable} if every
-function in $q$ is in \VocR. The \emph{blind spot} of \Fz is
-\begin{equation}
-  \label{eq:blind}
-  \Blind = \{\, q \mid q \text{ is not expressible by } \Fz
-           \ \lor\ q \text{ is not judgeable against } \Rengine \,\}.
-\end{equation}
-\Fz never generates a statement outside its own vocabulary or literal domain,
-however long it runs. A statement that \Fz does generate but cannot judge is
-generated in vain. Both halves of~\eqref{eq:blind} are properties of the source
-code of \Fz and \Rengine, so \Blind can be measured before any test runs.
-
-\paragraph{Goal.} Find statements $q \in \Blind$ on which $E$ violates the crash
-oracle, without a reference engine, and with each finding regenerated from a
-recorded seed. We look for two things: which functions and values put a
-statement in \Blind, and where to get statements in that region that are likely
-to break $E$.
+Section~\ref{sec:technique} gives the background the paper needs, states the
+problem precisely and presents \tool. Section~\ref{sec:impl} describes its
+implementation, Section~\ref{sec:eval} evaluates it, and
+Sections~\ref{sec:related} and~\ref{sec:threats} discuss related work and the
+threats to validity.
 
 \subsection{Why the Obvious Alternatives Fall Short}
 
 \paragraph{Why not widen the incumbent fuzzer instead?} Its maintainers could add
-\sql{lpad} to \Voc and \imax to \Lit, and the defects in this paper would then be
-within reach. But that needs someone to know which function and which value to
-add. The blind spot is large: any function outside \Voc and any value outside
-\Lit belongs to it. Bug reports from another engine point at the corners where
+\sql{lpad} to its function vocabulary and \imax to its literal domain, and the
+defects in this paper would then be within reach. But that needs someone to know
+which function and which value to add. The blind spot is large: any function
+outside the vocabulary and any value outside the literal domain belongs to it
+(Section~\ref{sec:problem} defines it formally). Bug reports from another engine point at the corners where
 someone has already been hurt. A crash oracle then removes the need for a
 reference engine, so a function SQLite lacks can still be tested.
 
