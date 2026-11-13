@@ -1,11 +1,19 @@
-%% ABSTRACT (150-250 words, one paragraph, no citations, no \ref).
-%% Pattern (from earlier papers):
-%%  1. The problem in 2-3 short sentences. Plain words; what tools do today.
-%%  2. Why it matters: ONE concrete, real case with an exact number
-%%     (e.g. a CVE, a miscompilation, a measured share).
-%%  3. "We present \tool." What it does, in steps, in one or two sentences.
-%%  4. Results with numbers: "On X, \tool ... from A\% to B\%."
-%%  5. One honest lesson or surprise the work taught ("The run also shows ...").
-%% No "novel", no "we propose a framework", no promises without numbers.
-\todo{Problem in two sentences.} \todo{One real case with a number.}
-We present \tool. \todo{What it does.} \todo{Results with numbers.}
+A database engine must answer every statement or reject it with an error. Mature
+engines check this with differential fuzzers that compare their answers against
+a reference engine. Such a fuzzer cannot test a function it never generates, nor
+judge one its reference engine lacks. Turso, a SQLite-compatible engine written
+in Rust, runs such a fuzzer in continuous integration, yet the single statement
+\sql{select LPAD('a', 9223372036854775807, 'b')} terminated the whole process.
+We present \tool. It takes the shape of bug reports filed against a different
+engine, DuckDB, refills their literals with boundary values, and runs them
+against Turso together with a typed SQL generator. Its only oracle needs no
+reference engine: one statement must not end the process. \tool found three
+previously unknown defects in Turso's \sql{lpad}, \sql{rpad} and \sql{repeat}
+functions. Each aborts the engine from one statement, and \tool regenerates each
+from a recorded seed. Our patch for them exposed a fourth defect in the same
+length check, which \tool did not find. Our two patches, which fix all four,
+were merged upstream. None of Turso's own fuzzers can express any of the four,
+since the three functions are absent from all of them. At an equal budget of
+20{,}000 cases, mined reports and typed generation each reached both root causes
+of the three defects, and drawing from both sources found the first defect at
+case 101.

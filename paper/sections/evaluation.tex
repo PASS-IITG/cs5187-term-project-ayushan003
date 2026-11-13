@@ -1,54 +1,313 @@
 \section{Evaluation}
 \label{sec:eval}
-%% Structure (keep): RQ list -> Subjects -> Baselines -> Measurements
-%% -> Setup -> one \subsection per RQ with Observations.
-%% Each RQ is a plain question a practitioner would ask.
 
-\focus{\textbf{Research questions.} State 2--4 questions a practitioner would
-  actually ask. Each is a plain yes/no or how-much question you can answer
-  with a measurement --- not ``Is our tool good?''. Cover: does it work
-  (\rqref{1}), is it better than a simpler baseline (\rqref{2}), does it
-  change the outcome for a user (\rqref{3}), and what does it cost
-  (\rqref{4}). Every RQ must be answered later by an \texttt{observation}
-  box backed by a number. This is graded.}
-
-We ask \todo{n} questions.
+We ask four questions.
 \begin{itemize}
-  \item[\rqref{1}] \todo{Question?}
-  \item[\rqref{2}] \todo{Question, compared with simpler baselines?}
-  \item[\rqref{3}] \todo{Does it change what tools/users get?}
-  \item[\rqref{4}] What does \tool cost in time \todo{and resources}?
+  \item[\rqref{1}] Does \tool find previously unknown defects in an engine that
+        already fuzzes itself, and are they accepted upstream?
+  \item[\rqref{2}] At an equal budget, which defects does each source of
+        statements reach: mined templates, the typed generator, or both?
+  \item[\rqref{3}] Do the defects lie in the blind spot of the engine's own
+        fuzzers, or could those fuzzers have found them with more time?
+  \item[\rqref{4}] What does \tool cost in time and in requests?
 \end{itemize}
 
 \subsection{Subjects}
 \label{sec:subjects}
-%% Selection criteria as an enumerate; exact versions/commits; why these.
-We select \todo{n} subjects with the following criteria:
+We test one engine and mine one other. We chose the engine under test with the
+following criteria:
 \begin{enumerate}
-  \item \todo{criterion, with the reason};
+  \item it is actively maintained and reviews outside contributions, so a report
+        gets an answer within weeks;
+  \item it can be built from source at any commit, so a defect can be confirmed
+        on the current main branch and shown fixed afterwards;
+  \item it already runs its own fuzzers, so a defect we find is one those fuzzers
+        missed rather than one nobody looked for.
 \end{enumerate}
+Turso meets all three. We used version 0.9.0-pre.2 at four commits: 730017f96,
+where the first campaign ran; b588fbdc6, the last commit before our fixes;
+ec86571642a6, which has only our first patch; and 7f0a9e6f4, which has both.
+We mined DuckDB because it labels confirmed issues and because its fixes usually
+carry a regression test with the triggering query~\cite{duckdb27846}. From 600
+closed issues \tool kept 200, and from those it extracted 659 reproductions: 526
+from regression tests and 133 from issue bodies.
 
 \subsection{Baselines}
 \label{sec:baselines}
-%% description list; each baseline: what it is, why it is a fair comparison.
 \begin{description}
-  \item[Default.] \todo{}
+  \item[Mined only.] \tool with templates from DuckDB reports and no generator.
+  \item[Generated only.] \tool with the typed generator and no templates. This is
+        the plain baseline: a grammar-based fuzzer with boundary values.
+  \item[Both.] Each case is drawn from either source.
+  \item[Turso's own fuzzers.] Not run by us. We read their source to answer
+        \rqref{3}.
 \end{description}
+All three runs use the same budget of 20{,}000 cases, the same seeds 0 to
+19{,}999, the same crash oracle, and the same binary, b588fbdc6, which has none
+of our patches.
 
 \subsection{Measurements}
 \begin{description}
-  \item[\rqref{1}.] \todo{What exactly is measured.}
+  \item[\rqref{1}.] Defects found, their upstream state, the exit status and
+        output of each reduced statement before and after our patches, and
+        whether the tool regenerates each one from a single seed.
+  \item[\rqref{2}.] Per run: cases executed, the share the engine accepted, oracle
+        hits, and distinct signatures, with the first seed that reaches each.
+        The same runs repeated on the build with only our first patch.
+  \item[\rqref{3}.] For each defect, whether its function is in Turso's fuzzer
+        vocabulary, whether its literals are in that fuzzer's domain, and whether
+        SQLite implements the function.
+  \item[\rqref{4}.] Wall-clock time and cases per second for each run, and
+        requests made to build the corpus.
 \end{description}
 
 \subsection{Setup}
-%% Machine, OS, compiler/tool versions, time limits, repetitions.
-\todo{Machine, versions, repetitions.}
+All measurements ran on one laptop: an Intel Core i7-1360P with 16 logical CPUs
+and 15\,GB of memory, under Linux kernel 7.0, with Python 3.14.4 and Rust
+1.88.0. Each case had a 10-second time limit. The statement for defect~4 also ran
+under a 6\,GB memory limit, so the pre-fix build would fail fast instead of
+building a string of several gigabytes. Each run in Section~\ref{sec:rq2} was
+done once; Section~\ref{sec:threats} discusses what that allows us to claim.
 
-\subsection{\rqref{1}: \todo{Short question}}
+\subsection{\rqref{1}: Does \tool Find New Defects?}
 \label{sec:rq1}
-\todo{Table/figure first, then text that reads it.}
+
+\begin{table*}[t]
+  \caption{The four defects, each run as one statement in a fresh process.
+  \emph{Before}: Turso b588fbdc6, which has none of our patches.
+  \emph{After}: 7f0a9e6f4, which has both. Exit status 134 is SIGABRT.
+  \emph{Found by}: how the defect was first found. \emph{Seed}: the seed that
+  makes \tool regenerate the defect in a single case in the run that draws from
+  both sources. Defect~4 ran under a 6\,GB memory limit;
+  3{,}999{,}999{,}996 is $10^9$ characters times 4 bytes, minus the
+  one-character input.}
+  \label{tab:defects}
+  \footnotesize
+  \begin{tabular}{@{}rllrrll@{}}
+    \toprule
+     & Function & Defect & Before & After & Found by & Seed \\
+    \midrule
+    1 & \sql{lpad}   & allocates before the length check & 134, 2.28\,s & 1, 0.02\,s & \tool & 4{,}553 \\
+    2 & \sql{rpad}   & allocates before the length check & 134, 2.24\,s & 1, 0.02\,s & \tool & 101 \\
+    3 & \sql{repeat} & allocates first; size can overflow & 134, 2.27\,s & 1, 0.02\,s & \tool & 5{,}080 \\
+    4 & \sql{lpad}   & counts characters, limit is bytes & 134, 3.96\,s & 1, 0.02\,s & review of our patch & -- \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+Table~\ref{tab:defects} lists the defects. Defects 1 to 3 share a cause:
+\sql{lpad}, \sql{rpad} and \sql{repeat} sized their result from the caller's
+argument and allocated it before comparing it with
+\texttt{Value::MAX\_BLOB\_LENGTH}. At a length near \imax the allocation fails and
+Rust aborts the process before the check, which ran only on the finished
+result, is reached. \sql{lpad} and \sql{rpad} share one function body,
+\texttt{pad()}, so defects 1 and 2 have one root cause. We count them separately
+because each aborts the engine on its own, and a user who calls only \sql{rpad}
+is exposed. \sql{repeat} is a separate function that also multiplies, so its fix
+needed an overflow check as well. \tool found all three: the first abort came
+eight seconds into the first campaign. One patch fixed
+them~\cite{turso11219,turso11225}.
+
+Defect 4 became reachable only after that patch, and \tool did not find it. With
+the check now running first, it compared a count of characters with a limit in
+bytes. A four-byte fill such as an emoji passes a check of $10^9$ characters, and
+about 4\,GB is built before the byte limit rejects it. We noticed the unit
+mismatch while writing the first patch, but our pull request described it as
+``conservative'', meaning harmless. Turso's automated reviewer replied that it
+was permissive and supplied a demonstrating input. We then diagnosed the root
+cause, and a second patch computes the exact byte length before building
+anything~\cite{turso11260,turso11259}. On a debug build without a memory limit,
+the statement ran for about 34 seconds and peaked at 11.7\,GB.
 
 \begin{observation}
-\label{obs:first}
-\todo{One claim, with the number that supports it.}
+\label{obs:found}
+\tool found three previously unknown defects in Turso, each of which ends the
+process from one statement. Fixing them exposed a fourth, which \tool did not
+find. Our two patches, which fix all four, were merged upstream.
 \end{observation}
+
+\begin{observation}
+\label{obs:seed}
+\tool regenerates each of the three defects it found from one recorded seed, in
+a single case, on the pre-fix build: seed 4{,}553 for defect 1, 101 for defect 2
+and 5{,}080 for defect 3. We checked that each seed calls the function its
+defect names.
+\end{observation}
+
+\subsection{\rqref{2}: Mined Templates versus Typed Generation}
+\label{sec:rq2}
+
+\begin{table*}[t]
+  \caption{Each source of statements at an equal budget of 20{,}000 cases and
+  seeds 0 to 19{,}999. \emph{Valid}: share of executed cases the engine
+  accepted. \emph{Hits}: oracle violations on the pre-fix build. \emph{Distinct}:
+  distinct signatures, since eight hits on one signature are one defect found
+  eight times. The next three columns give the first seed that reached each
+  signature, or a dash if none did. Defects 1 and 2 share a signature; in all
+  three runs its first hit was an \sql{rpad} call. The third signature is
+  defect~1 again, reached with a length above $10^9$ computed from table data.
+  \emph{After patch 1}: hits when the same run is repeated on ec86571642a6, the
+  build with only our first patch.}
+  \label{tab:ablation}
+  \footnotesize
+  \begin{tabular}{@{}lrrrrrrrr@{}}
+    \toprule
+    Source & Executed & Valid & Hits & Distinct & Defects 1, 2 & Defect 3 & Defect 1, second signature & After patch 1 \\
+    \midrule
+    Mined only     & 19{,}169 &  8.9\% &  8 & 2 & 914 & 10{,}180 & --       & 0 \\
+    Generated only & 20{,}000 & 98.3\% & 12 & 3 & 762 & 5{,}367  & 6{,}376  & 0 \\
+    Both           & 19{,}759 & 71.1\% & 15 & 3 & 101 & 5{,}080  & 5{,}429  & 0 \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+Table~\ref{tab:ablation} gives the result. Both sources reached both root causes
+of defects 1 to 3: the shared \texttt{pad()} body and \sql{repeat}. The generator
+reached one more signature. On inspection it is defect~1 again: an \sql{lpad}
+call whose length, above $10^9$, is computed from table data. We first took this
+signature for defect~4. Repeating every run on the build with only our first
+patch settled it: all hits disappear, while that build still aborts on the
+defect-4 statement. So no source reached defect~4.
+
+The reason is in the boundary pools. Defect~4 needs a length of at most $10^9$
+characters whose result is more than $10^9$ bytes, so between $2.5\times10^8$ and
+$10^9$ for a four-byte fill. The integer pools jump from 32{,}767 to
+2{,}147{,}483{,}647. None of the 60{,}000 cases that the three modes generate for
+seeds 0 to 19{,}999 contains an integer literal in that range. The pools hold the limits of machine integers, not the
+limits the engine sets itself.
+
+Mined templates are wasteful but well aimed. Only 8.9\% of their cases ran at all,
+because most DuckDB reproductions use syntax Turso rejects. Still, those few
+valid cases reached both root causes. Drawing from both sources found the first
+defect at seed 101, against 762 and 914 for either source alone, and recorded the
+most hits.
+
+\begin{observation}
+\label{obs:gen}
+At an equal budget, mined templates and typed generation each reached both root
+causes of defects 1 to 3. No source reached defect~4, because no boundary pool
+holds a length near the engine's own limit of $10^9$.
+\end{observation}
+
+\begin{observation}
+\label{obs:both}
+Drawing from both sources reached the first defect at seed 101, compared with 762
+and 914 for each source alone, and recorded 15 hits against 12 and 8.
+\end{observation}
+
+\subsection{\rqref{3}: Could Turso's Own Fuzzers Have Found Them?}
+\label{sec:rq3}
+
+\begin{table}[t]
+  \caption{Why Turso's own fuzzers cannot find the four defects, measured on the
+  source at b588fbdc6~\cite{tursofuzzer}. \emph{Voc.}: the function is among the
+  47 scalar functions of the differential fuzzer, or among those its four
+  libFuzzer targets call. \emph{Dom.}: the defect's literal lies in the fuzzer's
+  integer range $[-10^6, 10^6]$ or its alphanumeric string set. \emph{Judge}:
+  SQLite implements the function.}
+  \label{tab:blind}
+  \footnotesize
+  \begin{tabular}{@{}rllccc@{}}
+    \toprule
+     & Function & Literal the defect needs & Voc. & Dom. & Judge \\
+    \midrule
+    1 & \sql{lpad}   & integer $9.2\times10^{18}$ & \xmark & \xmark & \xmark \\
+    2 & \sql{rpad}   & integer $9.2\times10^{18}$ & \xmark & \xmark & \xmark \\
+    3 & \sql{repeat} & integer $9.2\times10^{18}$ & \xmark & \xmark & \xmark \\
+    4 & \sql{lpad}   & multi-byte fill character  & \xmark & \xmark & \xmark \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:blind} answers the question with three independent checks. The
+differential fuzzer's table of 47 scalar functions contains none of
+\sql{lpad}, \sql{rpad} or \sql{repeat}. None of its four libFuzzer targets, and
+no Rust file under its \texttt{testing} directory, mentions them either. The
+functions are covered only by hand-written unit tests with small values. Even if
+the functions were added, the default integer range stops at $10^6$, and defects
+1 to 3 need a length near \imax. Strings are alphanumeric, and defect~4 needs a
+multi-byte character. Finally, SQLite has none of the three functions, so a
+differential oracle would have nothing to compare against.
+
+\begin{observation}
+\label{obs:blind}
+All four defects lie in the blind spot of Turso's own fuzzers on every axis we
+checked: the functions are absent from their vocabulary, the required literals
+are outside their domain, and the reference engine lacks the functions. More time
+would not have found them.
+\end{observation}
+
+\subsection{\rqref{4}: What Does \tool Cost?}
+\label{sec:rq4}
+
+\begin{table}[t]
+  \caption{Cost of each run on the pre-fix build in Table~\ref{tab:ablation}.
+  \emph{Time}: wall-clock seconds for the whole run. \emph{Rate}: cases executed
+  per second. \emph{First}: the case number of the first oracle hit.}
+  \label{tab:cost}
+  \footnotesize
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    Source & Time (s) & Rate (cases/s) & First \\
+    \midrule
+    Mined only     & 378.0 & 50.7 & 914 \\
+    Generated only & 388.8 & 51.4 & 762 \\
+    Both           & 448.3 & 44.1 & 101 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:cost} gives the cost of each run. Every run finished in under eight
+minutes. Drawing from both sources was the slowest per case and the fastest to a
+defect: at 44.1 cases per second, case 101 is reached in about two seconds. We do
+not have an explanation for the lower rate, and with one run per source we cannot
+tell it apart from noise. Building the corpus took 387 requests to the GitHub API,
+354 of them answered from a local cache, and is done once. Step~1 costs reading
+time rather than compute. The reducer shrank the case for defect~3 to a single
+statement in five executions.
+
+\begin{observation}
+\label{obs:cost}
+One run of 20{,}000 cases took under eight minutes on a laptop. With both sources,
+the first defect appeared at case 101, about two seconds into the run.
+\end{observation}
+
+\subsection{Discussion}
+\label{sec:discussion}
+
+\paragraph{Is mining bug reports better than generating SQL?} Not on this
+target. At the same budget both sources reached the same two root causes
+(Observation~\ref{obs:gen}). Mining did two things the generator did not. It
+found defects~1 and~3 first in time, before the generator's vocabulary contained
+\sql{lpad} or \sql{repeat}; we added those functions to the generator only after
+the defects were filed. And it pointed the work at pad functions in the first
+place. Each source covers a weakness of the other, which is why drawing from both
+reached a defect soonest (Observation~\ref{obs:both}).
+
+\paragraph{Are the defects in one family really four?} They are four ways for a
+user to end the process, each from a different statement, so we count them as
+four. They are not four independent mistakes: defects 1 and 2 share one
+function body, and defects 1 to 3 share one cause and one patch. Upstream records
+them as two issues and two pull requests. We report both counts and say which is
+which, so that neither inflates the other.
+
+\paragraph{Would more fuzzing time have found them?} No.
+Observation~\ref{obs:blind} is a property of the fuzzer's source, not of its
+budget. A generator cannot emit a function outside its vocabulary or a value
+outside its domain however long it runs. The same holds for \tool and defect~4:
+its pools contain no length in the range that defect needs.
+
+\paragraph{Why did fixing three defects reveal a fourth?} Before the first patch,
+the length check ran after the allocation, so its unit did not matter: the
+process died first. Once the check ran first, its unit decided the outcome. A
+patch is a good place to look for the next defect, since it marks code where the
+authors' first understanding was wrong. Our own first understanding of defect~4
+was wrong too, and a reviewer corrected it.
+
+\paragraph{Does this work on other engines?} We do not know. The method needs a
+second engine with many closed, labelled reports that carry reproductions, and
+an engine under test that shares enough of its dialect for some reports to run.
+Only 16 of 60 reports that we classified by hand looked transferable to another
+engine. Testing other pairs of engines, filling string holes with multi-byte
+values, and adding each engine's own limits to the boundary pools we leave for
+future work.

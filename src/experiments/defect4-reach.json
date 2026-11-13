@@ -1,0 +1,21 @@
+{
+ "range": [
+  250000000,
+  1000000000
+ ],
+ "seeds": "0-19999",
+ "modes": {
+  "variants": {
+   "cases": 20000,
+   "cases_with_integer_in_range": 0
+  },
+  "fuzzer": {
+   "cases": 20000,
+   "cases_with_integer_in_range": 0
+  },
+  "both": {
+   "cases": 20000,
+   "cases_with_integer_in_range": 0
+  }
+ }
+}

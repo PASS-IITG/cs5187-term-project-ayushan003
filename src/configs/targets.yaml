@@ -1,0 +1,68 @@
+# configs/targets.yaml - the engines GRAFT drives.
+#
+# GRAFT investigates one engine, Turso, and takes its test material from a
+# second, DuckDB. DuckDB appears here only as the repository the corpus is
+# mined from: GRAFT never executes DuckDB, so it has no binary entry.
+#
+# Fields:
+#   name           engine key, also used for the env override GRAFT_<NAME>_BIN
+#   kind           "cli" (driven through a subprocess) or "python" (in-process)
+#   binary         path to the executable; null for kind: python. "~" is expanded.
+#   version_cmd    argv tokens for the version probe; "{binary}" is replaced by
+#                  the resolved binary path. null for kind: python.
+#   repo           GitHub "owner/name" the corpus miner reads, or null
+#   label_filter   upstream label marking a confirmed bug, for the miner
+#   dialect        SQL dialect family this engine speaks
+#   oracles        oracles allowed against this engine
+#   pinned_commit  engine source SHA campaigns run against
+#   timeout_s      default per-query timeout
+#
+# Override a binary per session with GRAFT_<NAME>_BIN, e.g.
+#   export GRAFT_TURSO_BIN=/path/to/tursodb
+
+targets:
+  turso:
+    name: turso
+    kind: cli
+    binary: ~/targets/turso/target/release/tursodb
+    version_cmd: ["{binary}", "--version"]
+    repo: tursodatabase/turso
+    label_filter: correctness
+    dialect: sqlite
+    oracles: [crash]
+    # The post-fix commit: contains both of our merged patches. See
+    # configs/engine-revisions.yaml for the full set and what each one is for.
+    pinned_commit: 7f0a9e6f4
+    timeout_s: 10
+
+  duckdb:
+    name: duckdb
+    kind: cli
+    # Corpus source only. GRAFT mines duckdb/duckdb's closed, reproduced bug
+    # reports; it never runs DuckDB, so this binary is unused and may be absent.
+    binary: ~/targets/duckdb/build/release/duckdb
+    version_cmd: ["{binary}", "-no-agent", "--version"]
+    repo: duckdb/duckdb
+    # duckdb/duckdb has no "bug" label; "reproduced" is what a maintainer adds
+    # once they have reproduced a report, so it marks a confirmed defect.
+    label_filter: reproduced
+    dialect: duckdb
+    oracles: []
+    pinned_commit: null
+    timeout_s: 10
+
+  sqlite:
+    name: sqlite
+    kind: python
+    # Test infrastructure only. The planted-bug control engine
+    # (graft/engines/fake.py) stores its rows in Python's stdlib sqlite3 so the
+    # crash oracle can be tested against an engine with a known defect.
+    # SQLite is NOT a reference oracle in GRAFT and neither finding used it.
+    binary: null
+    version_cmd: null
+    repo: null
+    label_filter: null
+    dialect: sqlite
+    oracles: []
+    pinned_commit: null
+    timeout_s: 10

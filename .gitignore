@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Local run output. Nothing here is an input to a documented result.
+logs/
+workdir/
+*.db
+*.db-wal
+*.db-shm
+
+# Never commit a token. The corpus miner reads GITHUB_TOKEN from the
+# environment and must not write it anywhere.
+.env
+*.token

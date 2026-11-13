@@ -1,59 +1,244 @@
-# CS-5187 — Term Project
+# GRAFT — Cross-Engine Bug-Report-Guided Fuzzing for SQL Engines
 
-This repository is your starting point for the CS-5187 term project. It has two
-parts:
+GRAFT finds crash defects in SQL database engines by reusing the bug reports of
+*other* engines. It mines confirmed, reproduced reports from one engine's issue
+tracker, keeps the structure of each reproduction, refills its literals with
+boundary values, and runs the result — together with the output of a typed SQL
+generator — against the engine under test. A crash oracle judges every
+statement, so no reference engine is needed.
+
+Applied to [Turso](https://github.com/tursodatabase/turso), a SQLite-compatible
+engine written in Rust, GRAFT found three previously unknown defects in its
+string functions. Together with a fourth, identified during upstream review of
+our fix, all four are fixed in Turso by two merged pull requests.
+
+| | |
+|---|---|
+| **Engine under test** | Turso 0.9.0-pre.2 (`tursodb`) |
+| **Corpus** | 659 reproductions from 200 confirmed DuckDB issues |
+| **Defects fixed upstream** | 4, through 2 issues and 2 merged pull requests |
+| **Headline reproduction** | `make reproduce` |
+| **Test suite** | 514 tests |
+| **Report** | [`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) |
+
+## Why GRAFT
+
+A fuzzer can only test the functions its generator emits and judge the results
+its oracle understands. Turso already runs a differential fuzzer in CI that
+compares its answers against SQLite. Its own source sets the limits of what it
+can reach:
+
+- integer literals are drawn from `[-1_000_000, 1_000_000]`;
+- strings are alphanumeric only;
+- `lpad`, `rpad` and `repeat` are not in its function vocabulary;
+- SQLite, its reference engine, does not implement those functions.
+
+GRAFT targets exactly that region. Bug reports from another engine point at
+corners where someone has already been hurt, and a crash oracle can judge a
+function that has no reference implementation.
+
+## Results
+
+### Defects
+
+| # | Function | Root cause | Identified by | Upstream |
+|---|---|---|---|---|
+| [1](src/findings/defect-01-lpad/README.md) | `lpad` | result allocated before the length check | GRAFT, seed 4553 | [#11219](https://github.com/tursodatabase/turso/issues/11219) → [#11225](https://github.com/tursodatabase/turso/pull/11225) |
+| [2](src/findings/defect-02-rpad/README.md) | `rpad` | result allocated before the length check | GRAFT, seed 101 | [#11219](https://github.com/tursodatabase/turso/issues/11219) → [#11225](https://github.com/tursodatabase/turso/pull/11225) |
+| [3](src/findings/defect-03-repeat/README.md) | `repeat` | size computation overflows; allocated before the check | GRAFT, seed 5080 | [#11219](https://github.com/tursodatabase/turso/issues/11219) → [#11225](https://github.com/tursodatabase/turso/pull/11225) |
+| [4](src/findings/defect-04-multibyte-fill/README.md) | `lpad`, `rpad` | length checked in characters against a limit in bytes | review of PR #11225 | [#11260](https://github.com/tursodatabase/turso/issues/11260) → [#11259](https://github.com/tursodatabase/turso/pull/11259) |
+
+Each defect is a single statement that ends the engine's process. Measured on
+Turso `b588fbdc6` (before our patches) and `7f0a9e6f4` (after):
+
+| Statement | Before | After |
+|---|---|---|
+| `select LPAD('a', 9223372036854775807, 'b')` | exit 134 (SIGABRT), `memory allocation of 9223372036854775806 bytes failed` | exit 1, `string or blob too big (18)` |
+| `select RPAD('a', 9223372036854775807, 'b')` | exit 134 (SIGABRT), `memory allocation of 9223372036854775806 bytes failed` | exit 1, `string or blob too big (18)` |
+| `select repeat('a', 9223372036854775807)` | exit 134 (SIGABRT), `memory allocation of 9223372036854775807 bytes failed` | exit 1, `string or blob too big (18)` |
+| `SELECT length(LPAD('a', 1000000000, '😀'))` | exit 134 (SIGABRT) under a 6 GB cap, `memory allocation of 3999999996 bytes failed` | exit 1, `string or blob too big (18)` |
+
+Root causes, measurements and regenerating seeds are in
+[`src/findings/`](src/findings/README.md).
+
+### Upstream submissions
+
+State as of 2026-11-13.
+
+| Project | Submission | Subject | State |
+|---|---|---|---|
+| Turso | Issue [#11219](https://github.com/tursodatabase/turso/issues/11219) | defects 1–3 | Closed, fixed by #11225 |
+| Turso | PR [#11225](https://github.com/tursodatabase/turso/pull/11225) | fix for defects 1–3 | **Merged** (`ec86571642a6`) |
+| Turso | Issue [#11260](https://github.com/tursodatabase/turso/issues/11260) | defect 4 | Closed, fixed by #11259 |
+| Turso | PR [#11259](https://github.com/tursodatabase/turso/pull/11259) | fix for defect 4 | **Merged** (`121cd0a8c80b`) |
+| Apache DataFusion | Issue [#27001](https://github.com/apache/datafusion/issues/27001) | `A * 0` simplification drops the result type | Open |
+| Apache DataFusion | PR [#27002](https://github.com/apache/datafusion/pull/27002) | fix for #27001 | Open |
+
+The DataFusion submissions were made during the same investigation and are
+outside the Turso evaluation. Submitted issue and pull-request texts, and both
+Turso patches, are in [`src/findings/patches/`](src/findings/patches/README.md).
+
+### Input sources at an equal budget
+
+Three 20,000-case runs on the pre-fix build, one per input source
+([`src/experiments/`](src/experiments/README.md)):
+
+| Source | Executed | Valid | Hits | First defect (case) |
+|---|---|---|---|---|
+| Mined templates | 19,169 | 8.9% | 8 | 914 |
+| Typed generator | 20,000 | 98.3% | 12 | 762 |
+| Both | 19,759 | 71.1% | 15 | **101** |
+
+Both sources reach the two root causes of defects 1–3. Drawing from both finds
+the first defect soonest, about two seconds into the run.
+
+## How it works
 
 ```
-paper/    the report, in FSE (ACM acmsmall) LaTeX format  ← write here
-src/      your code (tool, scripts, experiments, data)     ← code here
+ DuckDB closed issues ──mine──▶ 659 reproductions
+                                       │
+                 literals ──▶ typed holes   (keep the reproduction's structure)
+                                       │
+                 boundary values ──▶ filled statements ─┐
+                                                        │
+ capability probe ──▶ typed generator ──▶ schema, ──────┤   --mode selects
+                      data, queries                     │   either or both
+                                                        ▼
+                                                 run on tursodb
+                                                        │
+                              crash oracle: did one statement end the process?
+                                                        │
+                reduce ─▶ re-verify on current main ─▶ duplicate search ─▶ report
 ```
 
-Your project can be in **any** area of the course: static analysis, dynamic
-analysis / testing, or software engineering more broadly (empirical studies,
-program repair, refactoring, build systems, …). The template does not assume a
-particular topic.
+1. **Measure the blind spot.** Read the incumbent fuzzer's source for its
+   function vocabulary, literal domain and reference engine.
+2. **Mine and template.** Collect closed DuckDB issues labelled *reproduced*,
+   extract the SQL from each fix's regression test and the issue body, and
+   replace every literal with a typed hole.
+3. **Fill and run.** Fill holes from boundary-weighted pools (including
+   `i64::MAX`), add cases from a typed generator gated by the engine's probed
+   capabilities, and run each case in a fresh `tursodb` process with a time and
+   memory limit.
+4. **Triage.** Group violations by signature, reduce, re-verify on the current
+   upstream main branch, search for duplicates, and draft a report.
 
-## What to do
+For example, the regression test added for DuckDB issue #27846 templates to
 
-1. **Put your code in `src/`.** Everything that produces a result or a number in
-   your paper goes there, with a note on how to build and run it. See
-   [`src/README.md`](src/README.md).
-2. **Write your report in `paper/`.** Edit the section files in
-   `paper/sections/`. Build the PDF with:
-   ```sh
-   cd paper
-   make          # builds paper/main.pdf
-   make check    # checks for leftover TODOs, banned words, undefined refs, page limit
-   ```
-3. **Address the five graded parts.** In `paper/`, each is flagged with a red
-   `FOCUS` box that says what it must contain. Write the section, then **delete
-   that `\focus{...}` line** (keep the section). The graded parts are:
+```sql
+select LPAD({s4}, {n0}, {s5}), LPAD({s6}, {n1}, {s7}),
+       LPAD({s8}, {n2}, {s9}), RPAD({s10}, {n3}, {s11})
+```
 
-   | Part | Where |
-   |------|-------|
-   | Motivating example | `sections/introduction.tex` |
-   | Workflow | `sections/approach.tex` |
-   | Research questions | `sections/evaluation.tex` |
-   | Related work | `sections/related.tex` |
-   | Threats to validity | `sections/threats.tex` |
+and over seeds 0–3999 places `9223372036854775807` into a pad call in
+1,054 cases (26.4%).
 
-4. **Finish clean.** A submittable report has **zero** red `\focus` and **zero**
-   `\todo`, and `make check` passes. Use
-   [`paper/CHECKLIST.md`](paper/CHECKLIST.md) before you submit.
+## Getting started
 
-## Rules that matter (see `paper/STYLE.md`)
+### Requirements
 
-- Every number in the paper comes from a real run of your code in `src/` — never
-  invented or rounded from memory.
-- The motivating example must be **real**, with exact numbers.
-- Cite only papers you have verified; fabricated citations are not accepted.
-- Write in plain, simple English.
+- Python 3.10 or later (results were produced with Python 3.14.4)
+- The pinned packages in [`src/requirements.txt`](src/requirements.txt):
+  `PyYAML 6.0.3`, `requests 2.34.2`, `sqlglot 30.27.0`, `pytest 9.2.0`
+- To run against an engine: Rust 1.88.0 and Turso builds (see below)
 
-## Submitting
+### Install
 
-Commit both your `src/` code and your `paper/` sources (not the built PDF — it is
-gitignored). Make sure the repository builds from a clean checkout:
+```bash
+git clone https://github.com/PASS-IITG/cs5187-term-project-ayushan003
+cd cs5187-term-project-ayushan003/src
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+```
 
-```sh
+### Reproduce the headline result
+
+From `src/`:
+
+```bash
+make reproduce
+```
+
+This replays the chain end to end: the source bug report, its template, the
+seeded fill and its 26.4% rate, the four limits of Turso's own fuzzer, and
+defects 1 and 4 before and after the patches. Steps 1–4 need only this
+repository. Step 5 runs when both Turso builds are available and otherwise
+prints the commands to build them.
+
+### Build the Turso binaries
+
+```bash
+# after: current main, containing both merged fixes
+git clone https://github.com/tursodatabase/turso ~/targets/turso
+cd ~/targets/turso && cargo build --release --bin tursodb
+
+# before: the last commit without our fixes, in its own worktree
+git -C ~/targets/turso worktree add ~/targets/turso-prefix b588fbdc6
+cd ~/targets/turso-prefix && cargo build --release --bin tursodb
+
+export GRAFT_TURSO_BIN=~/targets/turso/target/release/tursodb
+export GRAFT_TURSO_PREFIX_BIN=~/targets/turso-prefix/target/release/tursodb
+```
+
+## Usage
+
+All commands run from `src/`.
+
+| Command | What it does |
+|---|---|
+| `make reproduce` | replay the headline result |
+| `make test` | run the 514 tests |
+| `make campaign` | run a bounded 2,000-case campaign against Turso |
+| `python -m graft.campaign --mode {variants,fuzzer,both} --max-cases N --seed-start S` | run a campaign from a chosen seed and input source |
+| `make probe` | re-probe Turso's capabilities into `configs/capabilities.yaml` |
+| `make smoke` | run a few statements through the engine adapter |
+| `make corpus` | re-mine the DuckDB corpus (needs `GITHUB_TOKEN`; the corpus is already committed) |
+
+Every random choice comes from a seeded generator and the seed is stored with
+each finding, so any case can be regenerated from its seed alone. The commands
+for each experiment are in [`src/experiments/README.md`](src/experiments/README.md).
+
+## Repository structure
+
+```
+.
+├── paper/                       the report
+│   ├── GRAFT-report.pdf         compiled report (ACM sigconf)
+│   ├── main.tex, sections/      LaTeX source, one file per section
+│   └── Makefile                 builds the PDF; `make check` runs submission checks
+├── src/                         the code
+│   ├── graft/                   the tool
+│   │   ├── engines/             tursodb adapter and a planted-defect test engine
+│   │   ├── corpus/              mining, extraction, classification, templating
+│   │   ├── generate/            capability probing and the typed SQL generator
+│   │   ├── oracle/              the crash oracle
+│   │   ├── triage/              reduction, re-verification, duplicate search, reports
+│   │   ├── campaign.py          the seeded, resumable campaign loop
+│   │   └── reproduce.py         the headline replay
+│   ├── tests/                   514 tests
+│   ├── configs/                 targets, engine revisions, capabilities, weights
+│   ├── data/                    the mined DuckDB corpus
+│   ├── experiments/             experiment scripts and raw results
+│   ├── findings/                one page per defect, plus upstream patches
+│   ├── docs/                    design, implementation notes, internal spec
+│   ├── Makefile
+│   └── requirements.txt
+├── CONTRIBUTIONS.md             signed contribution statement
+├── LICENSE
+└── README.md
+```
+
+## Report
+
+[`paper/GRAFT-report.pdf`](paper/GRAFT-report.pdf) is the full report in FSE
+format (ACM `sigconf`). It covers the motivation, the technique, the
+implementation, the evaluation, related work and threats to validity. To build
+it from source:
+
+```bash
 cd paper && make
 ```
+
+## License
+
+[MIT](LICENSE)

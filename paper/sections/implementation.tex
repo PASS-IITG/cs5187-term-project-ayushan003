@@ -1,6 +1,32 @@
 \section{Implementation}
 \label{sec:impl}
-%% Optional. Language, size (lines of code, number of modules), what it
-%% depends on (versions), how it is tested (unit tests, a hand-counted
-%% fixture). Pitfalls met while building it are worth a short paragraph each.
-\todo{Implementation.}
+
+\tool is written in Python~3.14 in 10{,}034 lines across 38 files, grouped
+into five packages: engine adapters, the corpus pipeline, the typed generator,
+the oracle, and triage. It depends on four libraries: PyYAML for configuration,
+requests for the GitHub API, sqlglot for reducing statements that parse, and
+pytest. A suite of 514 tests (5{,}041 lines) passes in about 31 seconds. Two
+problems we met while building it are worth reporting, because both produced
+wrong results that looked like right ones.
+
+\paragraph{Errors arrive in the middle of results.} \tool drives
+\texttt{tursodb} as a subprocess rather than through a library binding. The
+defects we look for end the process, and an in-process binding would take the
+test harness down with it. The cost is a text protocol. Turso writes errors to
+standard output, interleaved with result rows. Our first adapter looked for an
+error only on the first line of the output. A query that returned two rows and
+then failed therefore came back as three rows of data, the third being the error
+message. The adapter now scans the whole output, and a regression test covers
+this case.
+
+\paragraph{A declared type is not a stored type.} The generator first assumed
+that if \sql{CREATE TABLE t(c DATE)} parsed, the engine supported dates. SQLite
+and Turso map any unknown type name to a storage class, so such a column really
+holds integers. A generator built on that assumption reports type coverage it
+does not have. \tool therefore probes the real binary once, records which types
+it can tell apart and which functions exist, and refuses to emit anything else.
+
+\paragraph{The seed is the state.} Every random choice comes from a seeded
+generator, and a campaign writes its last seed on every progress report. A
+campaign can stop and resume exactly, and any single case can be regenerated
+from its seed alone. Section~\ref{sec:rq1} uses this to regenerate each defect.

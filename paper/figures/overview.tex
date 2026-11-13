@@ -1,23 +1,39 @@
-%% Figure: overview of the tool. Steps left to right, loop dashed.
-%% Grayscale-safe (black lines, black!6 fill), \scriptsize text, numbered
-%% steps matching the "Step N" subsections.
+%% Figure: overview of GRAFT. Steps left to right; the loop over seeds is dashed.
+%% Grayscale-safe (black lines, black!6 fill), \scriptsize text, step numbers
+%% match the "Step N" subsections of the Approach.
 \begin{tikzpicture}[
     x=1cm, y=1cm, font=\scriptsize,
     box/.style={draw, rounded corners=2pt, align=center, inner sep=2pt,
-                minimum height=9mm, text width=15mm, fill=white},
-    outbox/.style={draw, align=left, inner sep=2pt, fill=black!6,
-                text width=20mm, font=\tiny},
+                minimum height=10mm, text width=21mm, fill=white},
+    src/.style={draw, align=center, inner sep=2pt, fill=black!6,
+                minimum height=8mm, text width=21mm},
+    outbox/.style={draw, align=left, inner sep=3pt, fill=black!6,
+                text width=27mm, font=\tiny},
     flow/.style={-{Stealth[length=1.6mm]}, line width=0.5pt},
+    hint/.style={-{Stealth[length=1.6mm]}, line width=0.5pt, dash pattern=on 1pt off 1pt},
     back/.style={-{Stealth[length=1.6mm]}, line width=0.5pt, dash pattern=on 2pt off 1.5pt},
   ]
-  \node[box, text width=10mm] (in) at (0,0) {input};
-  \node[box] (s1) at (1.8,0) {\textbf{1} step one};
-  \node[box] (s2) at (3.8,0) {\textbf{2} step two};
-  \node[box] (s3) at (5.8,0) {\textbf{3} step three};
-  \node[outbox] (o) at (3.8,-1.6) {output one\\output two};
-  \draw[flow] (in) -- (s1);
-  \draw[flow] (s1) -- (s2);
+  % inputs
+  \node[src] (fz)  at (0, 1.7)  {incumbent fuzzer\\source code};
+  \node[src] (trk) at (0, 0)    {another engine's\\bug tracker};
+  \node[src] (gen) at (3.35,-1.75) {typed SQL\\generator};
+  % steps
+  \node[box] (s1) at (3.35, 1.7) {\textbf{1} measure the\\blind spot};
+  \node[box] (s2) at (3.35, 0)   {\textbf{2} mine reports,\\make templates};
+  \node[box] (s3) at (6.7, 0)    {\textbf{3} fill with boundary\\values and run};
+  \node[box] (s4) at (10.05, 0)  {\textbf{4} reduce, re-check,\\report};
+  % outputs
+  \node[outbox] (o1) at (6.7, 1.7) {functions and values the\\fuzzer cannot emit or judge};
+  \node[outbox] (o4) at (10.05,-1.75) {defect: one statement,\\seed, signature, report};
+  % edges
+  \draw[flow] (fz) -- (s1);
+  \draw[flow] (s1) -- (o1);
+  \draw[flow] (trk) -- (s2);
   \draw[flow] (s2) -- (s3);
-  \draw[flow] (s3.south) |- (o.east);
-  \draw[back] (s3.north) -- ++(0,0.35) -| node[pos=0.25, above] {repeat} (s2.north);
+  \draw[flow] (gen.east) -| ([xshift=-4mm]s3.south);
+  \draw[hint] (o1) -- node[right, font=\tiny] {where to aim} (s3);
+  \draw[flow] (s3) -- node[above, font=\tiny] {crash} (s4);
+  \draw[flow] (s4) -- (o4);
+  \draw[back] ([xshift=3mm]s3.south) to[out=-80, in=-100, looseness=5]
+        node[below, font=\tiny] {next seed} ([xshift=9mm]s3.south);
 \end{tikzpicture}

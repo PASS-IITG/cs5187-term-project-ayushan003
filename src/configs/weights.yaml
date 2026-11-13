@@ -1,0 +1,49 @@
+# configs/weights.yaml - sampling weights for the generator.
+#
+# Two kinds of key are used:
+#
+#   template sources - how often a template from each source is picked
+#                      (gen/templates.py). A template taken from a confirmed
+#                      finding is worth far more than one from an arbitrary
+#                      mined repro, because the finding is a defect this
+#                      project reproduced itself.
+#   feature tags     - SPEC tags (fn:, op:, clause:, type:, agg:, join:, cte:,
+#                      set:, win:) to bias toward. Empty means uniform; P10
+#                      fills this from what actually produces hits.
+#
+# The tag weights below are seeded from docs/MINED_PATTERNS.md rather than
+# invented: of 181 classified mined issues the leading classes are
+# optimizer_rewrite 24, join_semantics 20, aggregate_semantics 15 and
+# null_handling 15, so the tags those bugs are built from are worth more.
+
+weights:
+  # --- template sources ---
+  finding: 8.0
+  repro: 1.0
+
+  # --- feature tags, from the mined bug-class distribution ---
+  op:is_null: 3.0
+  op:is_not_null: 2.0
+  op:not: 2.5
+  op:not_in: 2.5
+  op:in: 2.0
+  join:left: 3.0
+  join:full: 2.5
+  join:right: 2.5
+  join:inner: 1.5
+  agg:count: 2.0
+  agg:sum: 2.0
+  agg:min: 1.5
+  agg:max: 1.5
+  clause:group_by: 2.0
+  clause:having: 2.0
+  clause:distinct: 1.5
+  clause:limit: 1.5
+  clause:subquery: 2.5
+  clause:order_by: 1.5
+  clause:cast: 2.0
+  win:lead: 1.5
+  win:lag: 1.5
+  clause:window_frame_rows: 2.0
+  set:union: 1.5
+  cte:recursive: 1.5

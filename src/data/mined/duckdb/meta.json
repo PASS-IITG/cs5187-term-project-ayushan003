@@ -1,0 +1,44 @@
+{
+  "target": "duckdb",
+  "repo": "duckdb/duckdb",
+  "label_filter": "reproduced",
+  "mined_at": "2026-10-28T17:09:08Z",
+  "max_issues": 200,
+  "counts": {
+    "candidates": 600,
+    "skipped_pull_requests": 1,
+    "skipped_state_reason": 101,
+    "skipped_labels": 0,
+    "kept": 200,
+    "with_fix_sha": 140,
+    "with_fix_pr": 118,
+    "with_test_text": 126,
+    "unreachable_commits": 7,
+    "pr_from_subject": 93,
+    "pr_from_api": 25,
+    "cross_referenced_events": 0,
+    "requests_made": 387,
+    "cache_hits": 354
+  },
+  "engine": {
+    "engine_version": "v2.1.0-dev90648 (Development Version) f88890739f",
+    "engine_commit": "f88890739f",
+    "configured_commit": "f88890739f",
+    "kind": "cli",
+    "text_cells": false,
+    "cell_fidelity_note": "typed protocol: cells carry their JSON/driver types."
+  },
+  "fix_test_text": "unified diff of the changed test files, from the GitHub API; truncated to 20480 bytes per issue",
+  "fix_lookup_values": {
+    "closing_commit": "sha came from the issue's closed event",
+    "referenced_commit": "sha came from a referenced event only",
+    "pull_request": "fix found through a pull request",
+    "closing_commit_unreachable": "sha named by the API but not reachable in the repo: fix_files and fix_test_text are UNAVAILABLE, not empty",
+    "referenced_commit_unreachable": "referenced sha not reachable in the repo: fix_files and fix_test_text are UNAVAILABLE, not empty",
+    "none": "the API exposed no fix at all; fix_sha is UNKNOWN"
+  },
+  "fix_pr_source_values": {
+    "api": "GitHub linked the pull request itself",
+    "commit_subject": "parsed from the squash-merge '(#N)' convention in the commit subject: a convention, not a confirmation"
+  }
+}

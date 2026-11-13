@@ -1,0 +1,17 @@
+{
+  "total_count": 2,
+  "items": [
+    {
+      "number": 11175,
+      "title": "core/dialect: reject wrong argument counts instead of panicking",
+      "state": "open",
+      "html_url": "https://github.com/tursodatabase/turso/issues/11175"
+    },
+    {
+      "number": 9917,
+      "title": "core/json: classify arrow operands the way SQLite's jsonPathFromDbValue() does",
+      "state": "closed",
+      "html_url": "https://github.com/tursodatabase/turso/pull/9917"
+    }
+  ]
+}

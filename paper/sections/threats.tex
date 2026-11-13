@@ -1,16 +1,47 @@
 \section{Threats to Validity}
 \label{sec:threats}
-%% Internal / External / Construct. For each threat: what it is, what we did
-%% about it (itemize if several guards), what remains. Report non-determinism
-%% and LLM run-to-run variation with numbers.
-\focus{\textbf{Threats to validity.} Be honest about what could make your
-  conclusions wrong. Cover all three kinds below. For each: name the threat,
-  say what you did to reduce it (itemise the guards), and what still remains.
-  Report any non-determinism or run-to-run variation with numbers. Graded on
-  honesty, not on having zero threats.}
 
-\paragraph{Internal threats.} \todo{}
+\paragraph{Internal threats.} A harness defect can look like an engine defect.
+During development our own adapter once read an error message as a result row
+(Section~\ref{sec:impl}). We guarded against this as follows:
+\begin{itemize}
+  \item every reported statement was re-run by hand on a fresh process, on the
+        current upstream main branch, before it was filed;
+  \item each defect was confirmed on two builds of the same source tree that
+        differ only by our patches, so the patch explains the change;
+  \item a test engine with planted defects checks that the oracle fires on a real
+        defect and stays silent on a correct engine and on invalid SQL;
+  \item every seed in Table~\ref{tab:defects} was run again in a single case and
+        reproduced the signature claimed.
+\end{itemize}
+Attributing a hit to a defect is a second internal threat. We first mapped one
+signature to defect~4 by hand, and it was defect~1 reached another way
+(Section~\ref{sec:rq2}). Every attribution in this paper was therefore checked
+against the build that has only our first patch, which separates defect~4 from
+the other three. Each run in Table~\ref{tab:ablation} was done once. Seeds make
+a run repeatable on the same code, so the counts there are exact for that code.
+The first seed at which a source reaches a defect is one sample and not a rate.
+Timings come from one laptop and will differ elsewhere. The claims rest on exit
+status and error text, which do not vary between our runs.
 
-\paragraph{External threats.} \todo{Subjects, platform, versions.}
+\paragraph{External threats.} We tested one engine, mined one other engine, and
+all four defects are in one family of string functions in one file. Three share a
+cause. Nothing here shows that the method finds defects in another engine, and
+Section~\ref{sec:discussion} gives two reasons to doubt that it transfers cheaply:
+it needs a rich, labelled tracker, and most mined reports do not run on a
+different dialect. The comparison in Table~\ref{tab:ablation} measures \tool as
+it stands now. The generator gained \sql{lpad}, \sql{rpad} and \sql{repeat} only
+after the first defects were filed, so the table does not say which source would
+have found them first at that time.
 
-\paragraph{Construct threats.} \todo{Does the metric measure what we claim?}
+\paragraph{Construct threats.} We measure the blind spot through one table of
+functions, one literal policy and a text search of one source tree. That is a
+sound lower bound: a generator cannot emit a function it does not name or a value
+outside its configured range. It is not a proof that no other code path in the
+project reaches the same statement. We also count defects by signature. A
+signature is a hash of the error, so two causes can share one, as defects 1
+and~2 do, and one cause can have two, as defect~1 does. For that reason we
+decided the count by reading the code, not from signatures. The blind-spot
+argument itself was formed after the first defect was found, as an explanation
+of why it had survived. We present it as a hypothesis that the evidence
+supports, not as the reason the first defect was found.

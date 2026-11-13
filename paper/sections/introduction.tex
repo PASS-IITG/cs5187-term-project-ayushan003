@@ -1,44 +1,101 @@
 \section{Introduction}
 \label{sec:intro}
-%% Paragraph plan (each paragraph = one job; keep to this order):
-%%  P1  Concrete scenario the reader knows: "Suppose you want to ...".
-%%      State what existing tools need or do, with citations.
-%%  P2  The first/known problem and who already works on it (cite).
-%%      End with where they stop: "These tools stop when ...".
-%%  P3  OUR problem, in plain words: "We focus on a second problem that
-%%      starts where they stop: ...". Why it is silent/dangerous.
-%%  P4  A real example with exact numbers, pointing to a figure
-%%      (Figure~\ref{fig:motivating}). Then "This is not a single case." + count.
-%%  P5  Prior work on the closest idea and its precise gap
-%%      ("However, they need ...", "Their method depends on ...").
-%%  P6  "We bring/We present \tool ..." + numbered steps (enumerate), each
-%%      step one sentence, each pointing to its section. Then list outputs.
-%%  P7  First results with numbers, and one lesson learned.
-%%  Contributions (itemize), each item ending in (Section~\ref{...}).
 
-\todo{P1: scenario.}
+Suppose a server process embeds a SQL engine and lets its users format reports
+with \sql{lpad}, which pads a string to a requested width. A user types a width
+of 9{,}223{,}372{,}036{,}854{,}775{,}807. The server should answer with an error
+message. If the engine instead ends the process, every other user's session ends
+with it. A database engine is trusted to be correct without being checked, so a
+defect of this kind is caught by the engine's own tests or not at all.
 
-\focus{\textbf{Motivating example.} Give one \emph{real} case (a bug report,
-  a CVE, a failing test, a slow build, a measured number) that shows the
-  problem is real and worth solving. Point to Figure~\ref{fig:motivating},
-  use exact numbers, then add one sentence proving it is not a one-off
-  (``This is not a single case.'' + a count). This is graded: no toy or
-  imaginary example.}
+Database engines are among the most heavily tested programs in practice.
+Differential testing runs the same query on two engines and reports any
+disagreement. Metamorphic oracles compare a query with an equivalent rewrite of
+itself~\cite{rigger2020tlp,rigger2020norec}. Grammar-based generators produce
+valid SQL at scale~\cite{zhong2020squirrel,liang2026sqlbull}. All of these tools
+stop at two boundaries: the generator can only emit the functions and values it
+was written to emit, and a differential oracle can only judge a feature that its
+reference engine also implements. We focus on the defects that sit past those
+two boundaries. A fuzzer can run for a year without reaching them, and the time
+it has already run says nothing about how close it is.
 
-\paragraph{Contributions.}
-\begin{itemize}
-  \item We define \todo{concept} (Section~\ref{sec:problem}).
-  \item We present \tool, which \todo{what} (Section~\ref{sec:approach}).
-  \item We evaluate \tool on \todo{n} \todo{subjects} (Section~\ref{sec:eval}).
-  \item We release the tool and all data (Section~\ref{sec:data}).
-\end{itemize}
-
-\begin{figure}[t]
-\begin{lstlisting}[numbers=none,escapechar=@]
-// the real code / input that shows the problem, trimmed with ...
+\begin{figure*}[t]
+\begin{lstlisting}[escapechar=@]
+-- (a) Regression test added by the fix for DuckDB issue #27846
+select LPAD('x', 10, '0'), LPAD('x', 4, '@\textcolor{black}{\ding{72}}@'), LPAD('x', 3, '@\textcolor{black}{\ding{72}}@ab'), RPAD('x', 3, '@\textcolor{black}{\ding{72}}@ab')
+-- (b) The same shape with every literal replaced by a typed hole
+select LPAD({s4}, {n0}, {s5}), LPAD({s6}, {n1}, {s7}), LPAD({s8}, {n2}, {s9}), RPAD({s10}, {n3}, {s11})
+-- (c) Filled from a boundary pool at seed 0, then run on Turso b588fbdc6
+select LPAD('', -9223372036854775808, 'abc'), LPAD('_', -128, '%'), LPAD('0', 9223372036854775807, 'abc'), RPAD('%', -128, 'ABC')
+-- (d) Reduced to one statement
+select LPAD('a', 9223372036854775807, 'b');
+@\textit{memory allocation of 9223372036854775806 bytes failed}@      @$\leftarrow$ process aborts, exit status 134@
 \end{lstlisting}
-\caption{\textcolor{red}{[Motivating example --- graded]} A real case of the
-  problem. \todo{The caption states the lesson, with the exact number, so a
-  reader who reads only captions gets it.}}
+\caption{The motivating example. A regression test from another engine~(a),
+templated~(b) and refilled with boundary values~(c), aborts Turso from one
+statement~(d). The marker \ding{72} stands for a four-byte emoji in the original
+test. Turso's own fuzzers cannot produce~(d): their 47-function vocabulary has
+no \sql{lpad}, and their integers stop at 1{,}000{,}000.}
 \label{fig:motivating}
-\end{figure}
+\end{figure*}
+
+Figure~\ref{fig:motivating} shows a real case. Turso~\cite{turso} is a
+SQLite-compatible engine written in Rust. It runs its own differential fuzzer in
+continuous integration: 41{,}205 lines of Rust that generate SQL and compare
+Turso's answers with SQLite's. Yet the statement in Figure~\ref{fig:motivating}d
+ended the process with exit status 134 (SIGABRT) in 2.28 seconds, where it should
+have returned the engine's own error \emph{string or blob too big}. Turso's
+fuzzer could never have produced it. Its vocabulary of 47 scalar functions does
+not contain \sql{lpad}, and it draws integer literals only from
+$[-1{,}000{,}000,\ 1{,}000{,}000]$~\cite{tursofuzzer}. Even if it had produced
+the statement, SQLite has no \sql{lpad} to compare the answer against. None of
+Turso's four libFuzzer targets or its differential fuzzer calls \sql{lpad},
+\sql{rpad} or \sql{repeat}.
+
+The closest prior work either chooses where to look from the grammar or reuses
+known defects through static analysis. SQLBull starts generation from grammar
+rules that a tester marks as feature-rich~\cite{liang2026sqlbull}.
+Recurring-vulnerability detectors turn a known patch into a rule and search for
+code that breaks it~\cite{cao2025vulpa,cao2025antman}. However, the first needs
+someone to pick the starting rules, and the second needs the defect to recur in
+shared or copied code. Turso and DuckDB share no code.
+
+We present \tool, which finds defects in this region in four steps:
+\begin{enumerate}
+  \item It reads the incumbent fuzzer's source and lists the functions and
+        values that fuzzer cannot generate (Section~\ref{sec:step-blind}).
+  \item It mines closed, reproduced bug reports from a different engine and keeps
+        each report's query as a template whose literals are typed holes
+        (Section~\ref{sec:step-mine}).
+  \item It fills those holes, and the output of a typed SQL generator, with
+        boundary values, and runs every statement against the engine under test
+        (Section~\ref{sec:step-run}).
+  \item It flags any statement that ends the process, then reduces, re-checks and
+        reports it (Section~\ref{sec:step-triage}).
+\end{enumerate}
+
+We ran \tool against Turso. It found three previously unknown defects in Turso's
+string functions: \sql{lpad} and \sql{rpad} allocate their result before checking
+its length, and \sql{repeat} also overflows its size computation. Our patch for
+them moved the length check in front of the allocation, and that exposed a
+fourth defect, which \tool did not find: the check counts characters against a
+limit in bytes. Our two patches, which fix all four, were merged
+upstream~\cite{turso11225,turso11259}. At an equal budget of 20{,}000 cases, the
+mined reports and the typed generator each reached both root causes of the
+three defects. The lesson we draw is a practical one: before spending compute on
+a fuzzer, spend an hour reading the fuzzer that is already there.
+
+\paragraph{Research contributions.}
+\begin{itemize}
+  \item We define the \emph{blind spot} of an incumbent fuzzer and show that it
+        can be measured from that fuzzer's source (Section~\ref{sec:motivation}).
+  \item We present \tool, which fills the blind spot with the shapes of another
+        engine's bug reports and with typed generation, and judges results with an
+        oracle that needs no reference engine (Section~\ref{sec:technique}).
+  \item We report three previously unknown defects in Turso found by \tool, each
+        regenerated from a recorded seed, and a fourth that our fix exposed. All
+        four are fixed upstream by our merged patches (Section~\ref{sec:rq1}).
+  \item We measure what each input source contributes at an equal budget, and
+        release the tool, the corpus and all data
+        (Sections~\ref{sec:rq2} and~\ref{sec:data}).
+\end{itemize}

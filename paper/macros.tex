@@ -15,10 +15,17 @@
 % Works for any CS-5187 project: a tool, a technique/method, or an empirical
 % study. With no tool (e.g. a study), read \tool as "our study" and reword
 % "We present \tool" -> "We study ...", "\tool records" -> "our method ...".
-\newcommand{\tool}{\textsc{YourTool}\xspace}   % TODO: final name (tool, method, or study)
+\newcommand{\tool}{\textsc{Graft}\xspace}   % the tool presented in this paper
 
 % ---- notation (one macro per symbol; comment says what it means) ----
-% \newcommand{\Seen}[1]{\ensuremath{\mathit{Seen}(#1)}} % example: lines the compiler sees
+\newcommand{\Fz}{\ensuremath{F}\xspace}                  % the incumbent fuzzer of the engine under test
+\newcommand{\Rengine}{\ensuremath{R}\xspace}                 % the reference engine that fuzzer compares against
+\newcommand{\Voc}{\ensuremath{V_F}\xspace}               % function vocabulary of F
+\newcommand{\VocR}{\ensuremath{V_R}\xspace}              % functions the reference engine implements
+\newcommand{\Lit}{\ensuremath{L_F}\xspace}               % literal domain of F (integers and strings)
+\newcommand{\Blind}{\ensuremath{B}\xspace}               % the blind spot of F
+\newcommand{\imax}{\texttt{i64::MAX}\xspace}             % 9223372036854775807
+\newcommand{\sql}[1]{\texttt{#1}}                        % inline SQL
 
 % ---- research questions ----
 \newcommand{\rqref}[1]{\textbf{RQ#1}\xspace}
